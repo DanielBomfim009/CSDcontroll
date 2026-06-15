@@ -1,5 +1,5 @@
 /**
- * SalarioPro PWA
+ * SalárioPro PWA
  * IndexedDB Manager
  */
 
@@ -22,7 +22,7 @@ class IndexedDBManager {
 
     async init() {
         if (!window.indexedDB) {
-            throw new Error("IndexedDB indisponivel neste navegador.");
+            throw new Error("IndexedDB indisponível neste navegador.");
         }
 
         return new Promise((resolve, reject) => {
@@ -31,7 +31,7 @@ class IndexedDBManager {
             request.onerror = () => reject(request.error);
 
             request.onblocked = () => {
-                reject(new Error("Feche outras abas do SalarioPro para atualizar o banco local."));
+                reject(new Error("Feche outras abas do SalárioPro para atualizar o banco local."));
             };
 
             request.onsuccess = () => {
@@ -94,7 +94,7 @@ class IndexedDBManager {
 
     getStore(storeName, mode = "readonly") {
         if (!this.db) {
-            throw new Error("Banco de dados ainda nao inicializado.");
+            throw new Error("Banco de dados ainda não inicializado.");
         }
 
         const transaction = this.db.transaction([storeName], mode);

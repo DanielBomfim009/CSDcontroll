@@ -13,6 +13,7 @@ const App = {
         this.state.competencia = Competencia.getCompetencia();
         this.definirDataPadrao();
         this.bindEvents();
+        this.setView(this.state.view);
 
         try {
             await DB.init();
@@ -20,7 +21,7 @@ const App = {
             this.render();
         } catch (error) {
             console.error(error);
-            this.showToast(error.message || "Nao foi possivel iniciar o banco local.");
+            this.showToast(error.message || "Não foi possível iniciar o banco local.");
         }
 
         this.registrarServiceWorker();
@@ -164,7 +165,7 @@ const App = {
             payload.id = existente.id;
             payload.criadoEm = existente.criadoEm || agora;
             await DB.update(STORES.APONTAMENTOS, payload);
-            this.showToast("Data ja existia. Apontamento substituido.");
+            this.showToast("Data já existia. Apontamento substituído.");
         } else {
             payload.criadoEm = agora;
             await DB.add(STORES.APONTAMENTOS, payload);
@@ -208,7 +209,7 @@ const App = {
         if (this.state.pendingDeleteId !== id) {
             this.state.pendingDeleteId = id;
             this.renderTabela();
-            this.showToast(`Clique em Confirmar para excluir ${Competencia.formatarData(registro.data)}.`);
+            this.showToast(`Toque em Confirmar para excluir ${Competencia.formatarData(registro.data)}.`);
             return;
         }
 
@@ -216,7 +217,7 @@ const App = {
         this.state.pendingDeleteId = null;
         await this.carregarApontamentos();
         this.render();
-        this.showToast("Apontamento excluido.");
+        this.showToast("Apontamento excluído.");
     },
 
     resetForm(restaurarData = true) {
@@ -238,12 +239,13 @@ const App = {
 
     setView(view) {
         this.state.view = view;
+        document.body.dataset.view = view;
         const titles = {
             dashboard: "Dashboard financeiro",
             apontamentos: "Apontamentos",
             folha: "Folha prevista",
-            historico: "Historico",
-            configuracoes: "Configuracoes"
+            historico: "Histórico",
+            configuracoes: "Configurações"
         };
 
         this.dom.navItems.forEach(item => {
@@ -254,7 +256,7 @@ const App = {
             panel.classList.toggle("is-active", panel.dataset.panel === view);
         });
 
-        this.dom.pageTitle.textContent = titles[view] || "SalarioPro";
+        this.dom.pageTitle.textContent = titles[view] || "SalárioPro";
     },
 
     obterResumo() {
@@ -348,7 +350,7 @@ const App = {
                 <div class="list-row">
                     <div>
                         <strong>${Competencia.formatarData(apontamento.data)} - ${calculo.tipoDia}</strong>
-                        <span>${apontamento.entrada} as ${apontamento.saida} | ${Horas.formatarHoras(calculo.horasTrabalhadas)} trabalhadas</span>
+                        <span>${apontamento.entrada} às ${apontamento.saida} | ${Horas.formatarHoras(calculo.horasTrabalhadas)} trabalhadas</span>
                     </div>
                     <strong>${Horas.formatarHoras(extras)} HE</strong>
                 </div>
@@ -362,7 +364,7 @@ const App = {
 
         if (!this.state.apontamentos.length) {
             tbody.innerHTML = `
-                <tr>
+                <tr class="empty-row">
                     <td colspan="6">
                         <div class="empty-state">Sem apontamentos</div>
                     </td>
@@ -378,15 +380,15 @@ const App = {
 
             return `
                 <tr>
-                    <td>
+                    <td data-label="Data">
                         <strong>${Competencia.formatarData(apontamento.data)}</strong>
                         <span>${calculo.tipoDia}</span>
                     </td>
-                    <td>${Horas.formatarHoras(calculo.jornada)}</td>
-                    <td>${Horas.formatarHoras(calculo.horasTrabalhadas)}</td>
-                    <td>${Horas.formatarHoras(extras)}</td>
-                    <td>${Horas.formatarHoras(calculo.horasFaltantes)}</td>
-                    <td>
+                    <td data-label="Jornada">${Horas.formatarHoras(calculo.jornada)}</td>
+                    <td data-label="Trabalhadas">${Horas.formatarHoras(calculo.horasTrabalhadas)}</td>
+                    <td data-label="Extras">${Horas.formatarHoras(extras)}</td>
+                    <td data-label="Falta">${Horas.formatarHoras(calculo.horasFaltantes)}</td>
+                    <td data-label="Ações">
                         <div class="row-actions">
                             <button class="row-action" type="button" data-action="edit" data-id="${apontamento.id}">Editar</button>
                             <button class="row-action danger" type="button" data-action="delete" data-id="${apontamento.id}">
@@ -446,7 +448,7 @@ const App = {
         const alvo = this.$("#historicoLista");
 
         if (!codigos.length) {
-            alvo.innerHTML = '<div class="empty-state">Sem historico</div>';
+            alvo.innerHTML = '<div class="empty-state">Sem histórico</div>';
             return;
         }
 
@@ -472,7 +474,7 @@ const App = {
         const dados = this.coletarFormulario();
 
         if (!dados.data || !dados.entrada || !dados.saida) {
-            this.dom.formPreview.innerHTML = "<span>Previa do dia</span><strong>Sem previa</strong>";
+            this.dom.formPreview.innerHTML = "<span>Prévia do dia</span><strong>Sem prévia</strong>";
             return;
         }
 
@@ -528,7 +530,7 @@ const App = {
         window.addEventListener("load", () => {
             navigator.serviceWorker
                 .register("./sw.js")
-                .catch(error => console.warn("Service worker nao registrado", error));
+                .catch(error => console.warn("Service worker não registrado", error));
         });
     }
 };

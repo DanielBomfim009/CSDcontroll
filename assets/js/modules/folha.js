@@ -1,5 +1,5 @@
 /**
- * SalarioPro PWA
+ * SalárioPro PWA
  * Motor financeiro
  */
 

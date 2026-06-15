@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#101114">
-    <meta name="description" content="SalarioPro - controle financeiro de horas trabalhadas com projecao salarial em tempo real.">
-    <title>SalarioPro | Dashboard</title>
+    <meta name="description" content="SalárioPro - controle financeiro de horas trabalhadas com projeção salarial em tempo real.">
+    <title>SalárioPro | Dashboard</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./assets/img/icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="./assets/css/app.css">
 </head>
 <body>
     <div class="app-shell">
-        <aside class="sidebar" aria-label="Navegacao principal">
+        <aside class="sidebar" aria-label="Navegação principal">
             <a class="brand" href="#dashboard" aria-label="Ir para dashboard">
                 <span class="brand-mark" aria-hidden="true">SP</span>
                 <span>
-                    <strong>SalarioPro</strong>
+                    <strong>SalárioPro</strong>
                     <small>PWA financeiro</small>
                 </span>
             </a>
@@ -44,13 +44,13 @@
                     <span class="nav-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10h-2a8 8 0 1 1-2.34-5.66L15 9h7V2l-2.93 2.93A9.96 9.96 0 0 0 12 2Zm-1 5h2v6l5 3-1 1.73-6-3.6V7Z"/></svg>
                     </span>
-                    <span>Historico</span>
+                    <span>Histórico</span>
                 </button>
                 <button class="nav-item" type="button" data-view="configuracoes">
                     <span class="nav-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65-2-3.46-2.49 1a7.28 7.28 0 0 0-1.69-.98L15 3h-4l-.36 2.93c-.6.24-1.17.57-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65 2 3.46 2.49-1c.52.41 1.09.74 1.69.98L11 21h4l.36-2.93c.6-.24 1.17-.57 1.69-.98l2.49 1 2-3.46-2.11-1.65ZM13 15.73A4 4 0 1 1 13 8a4 4 0 0 1 0 7.73Z"/></svg>
                     </span>
-                    <span>Configuracoes</span>
+                    <span>Configurações</span>
                 </button>
             </nav>
 
@@ -63,12 +63,12 @@
         <div class="workspace">
             <header class="topbar">
                 <div>
-                    <p class="eyebrow">Competencia atual</p>
+                    <p class="eyebrow">Competência atual</p>
                     <h1 id="pageTitle">Dashboard financeiro</h1>
-                    <p id="competenciaAtual" class="muted">Carregando competencia...</p>
+                    <p id="competenciaAtual" class="muted">Carregando competência...</p>
                 </div>
                 <div class="topbar-actions">
-                    <span class="system-pill" id="syncStatus">Offline-ready</span>
+                    <span class="system-pill" id="syncStatus">Offline</span>
                     <button class="primary-action" type="button" id="newEntryBtn">
                         <span aria-hidden="true">+</span>
                         Novo ponto
@@ -80,15 +80,15 @@
                 <section class="view is-active" data-panel="dashboard" aria-labelledby="dashboardTitle">
                     <div class="section-heading">
                         <div>
-                            <p class="eyebrow">Visao geral</p>
-                            <h2 id="dashboardTitle">Projecao em tempo real</h2>
+                            <p class="eyebrow">Visão geral</p>
+                            <h2 id="dashboardTitle">Projeção em tempo real</h2>
                         </div>
                         <p id="dashboardSubtitle" class="muted">Sem apontamentos</p>
                     </div>
 
                     <div class="metric-grid">
                         <article class="metric-card metric-income">
-                            <span class="metric-label">Liquido previsto</span>
+                            <span class="metric-label">Líquido previsto</span>
                             <strong id="liquidoPrevisto">R$ 0,00</strong>
                             <small id="liquidoHint">Proventos R$ 0,00</small>
                         </article>
@@ -139,7 +139,7 @@
                     <div class="dashboard-grid">
                         <section class="surface-panel" aria-labelledby="mixTitle">
                             <div class="panel-title">
-                                <h3 id="mixTitle">Composicao de horas</h3>
+                                <h3 id="mixTitle">Composição de horas</h3>
                                 <span id="totalHorasMix">0h totais</span>
                             </div>
                             <div class="bars" id="mixBars"></div>
@@ -147,7 +147,7 @@
 
                         <section class="surface-panel" aria-labelledby="recentTitle">
                             <div class="panel-title">
-                                <h3 id="recentTitle">Ultimos apontamentos</h3>
+                                <h3 id="recentTitle">Últimos apontamentos</h3>
                                 <button class="text-button" type="button" data-view-shortcut="apontamentos">Ver todos</button>
                             </div>
                             <div class="recent-list" id="recentEntries"></div>
@@ -158,7 +158,7 @@
                 <section class="view" data-panel="apontamentos" aria-labelledby="apontamentosTitle">
                     <div class="section-heading">
                         <div>
-                            <p class="eyebrow">Operacao diaria</p>
+                            <p class="eyebrow">Operação diária</p>
                             <h2 id="apontamentosTitle">Apontamentos</h2>
                         </div>
                     </div>
@@ -178,15 +178,15 @@
                                     <input type="time" id="entrada" value="07:00" required>
                                 </label>
                                 <label>
-                                    Saida almoco
+                                    Saída almoço
                                     <input type="time" id="saidaAlmoco" value="12:00" required>
                                 </label>
                                 <label>
-                                    Retorno almoco
+                                    Retorno almoço
                                     <input type="time" id="retornoAlmoco" value="13:00" required>
                                 </label>
                                 <label>
-                                    Saida
+                                    Saída
                                     <input type="time" id="saida" value="17:00" required>
                                 </label>
                             </div>
@@ -197,19 +197,19 @@
                             </label>
 
                             <div class="form-preview" id="formPreview">
-                                <span>Previa do dia</span>
-                                <strong>Sem previa</strong>
+                                <span>Prévia do dia</span>
+                                <strong>Sem prévia</strong>
                             </div>
 
                             <div class="form-actions">
                                 <button class="primary-action" type="submit" id="saveEntryBtn">Salvar apontamento</button>
-                                <button class="ghost-action" type="button" id="cancelEditBtn">Cancelar edicao</button>
+                                <button class="ghost-action" type="button" id="cancelEditBtn">Cancelar edição</button>
                             </div>
                         </form>
 
                         <section class="surface-panel table-panel" aria-labelledby="tableTitle">
                             <div class="panel-title">
-                                <h3 id="tableTitle">Lancamentos da competencia</h3>
+                                <h3 id="tableTitle">Lançamentos</h3>
                                 <span id="tableCount">0 registros</span>
                             </div>
                             <div class="table-scroll">
@@ -221,7 +221,7 @@
                                             <th>Trabalhadas</th>
                                             <th>Extras</th>
                                             <th>Falta</th>
-                                            <th>Acoes</th>
+                                            <th>Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="apontamentosTable"></tbody>
@@ -241,7 +241,7 @@
 
                     <div class="payroll-grid">
                         <article class="metric-card metric-income total-payroll">
-                            <span class="metric-label">Liquido</span>
+                            <span class="metric-label">Líquido</span>
                             <strong id="folhaLiquido">R$ 0,00</strong>
                             <small id="folhaResumo">0 registros</small>
                         </article>
@@ -266,7 +266,7 @@
                     <div class="section-heading">
                         <div>
                             <p class="eyebrow">Arquivo local</p>
-                            <h2 id="historicoTitle">Historico</h2>
+                            <h2 id="historicoTitle">Histórico</h2>
                         </div>
                     </div>
                     <div class="history-list" id="historicoLista"></div>
@@ -275,8 +275,8 @@
                 <section class="view" data-panel="configuracoes" aria-labelledby="configTitle">
                     <div class="section-heading">
                         <div>
-                            <p class="eyebrow">Parametros</p>
-                            <h2 id="configTitle">Configuracoes de calculo</h2>
+                            <p class="eyebrow">Parâmetros</p>
+                            <h2 id="configTitle">Configurações</h2>
                         </div>
                     </div>
                     <div class="settings-grid">
@@ -290,14 +290,14 @@
                         </article>
                         <article class="setting-row">
                             <span>Segunda a quinta</span>
-                            <strong>9h liquidas</strong>
+                            <strong>9h líquidas</strong>
                         </article>
                         <article class="setting-row">
                             <span>Sexta-feira</span>
-                            <strong>8h liquidas</strong>
+                            <strong>8h líquidas</strong>
                         </article>
                         <article class="setting-row">
-                            <span>Sabado</span>
+                            <span>Sábado</span>
                             <strong>HE 70%</strong>
                         </article>
                         <article class="setting-row">

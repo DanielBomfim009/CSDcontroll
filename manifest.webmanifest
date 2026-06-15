@@ -1,7 +1,7 @@
 {
-    "name": "SalarioPro",
-    "short_name": "SalarioPro",
-    "description": "Controle financeiro de horas trabalhadas com projecao salarial em tempo real.",
+    "name": "SalárioPro",
+    "short_name": "SalárioPro",
+    "description": "Controle financeiro de horas trabalhadas com projeção salarial em tempo real.",
     "start_url": "./index.html",
     "scope": "./",
     "display": "standalone",

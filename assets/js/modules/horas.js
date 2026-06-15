@@ -1,6 +1,6 @@
 /**
- * SalarioPro PWA
- * Modulo de horas
+ * SalárioPro PWA
+ * Módulo de horas
  */
 
 class HorasService {
@@ -90,11 +90,11 @@ class HorasService {
         const nomes = [
             "Domingo",
             "Segunda",
-            "Terca",
+            "Terça",
             "Quarta",
             "Quinta",
             "Sexta",
-            "Sabado"
+            "Sábado"
         ];
 
         return nomes[diaSemana];

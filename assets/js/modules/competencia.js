@@ -1,6 +1,6 @@
 /**
- * SalarioPro PWA
- * Modulo de competencia
+ * SalárioPro PWA
+ * Módulo de competência
  */
 
 class CompetenciaService {
@@ -65,7 +65,7 @@ class CompetenciaService {
         const inicio = this.formatarData(competencia.inicio);
         const fim = this.formatarData(competencia.fim);
 
-        return `${inicio} ate ${fim}`;
+        return `${inicio} até ${fim}`;
     }
 
     formatarData(data) {

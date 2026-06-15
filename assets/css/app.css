@@ -19,6 +19,7 @@
     --shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
     --radius: 8px;
     --sidebar: 264px;
+    --mobile-nav: 74px;
 }
 
 * {
@@ -28,6 +29,7 @@
 html {
     min-height: 100%;
     background: var(--bg);
+    overflow-x: hidden;
 }
 
 body {
@@ -39,6 +41,8 @@ body {
         var(--bg);
     color: var(--text);
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 button,
@@ -124,6 +128,15 @@ button {
     text-align: left;
     cursor: pointer;
     transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-item > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .nav-item:hover,
@@ -274,6 +287,7 @@ h3 {
     border-radius: var(--radius);
     cursor: pointer;
     transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .primary-action {
@@ -283,6 +297,7 @@ h3 {
     background: #2db99d;
     color: #06110f;
     font-weight: 800;
+    white-space: nowrap;
 }
 
 .primary-action:hover,
@@ -296,6 +311,7 @@ h3 {
     border: 1px solid var(--border);
     background: var(--surface-2);
     color: var(--text);
+    white-space: nowrap;
 }
 
 .text-button {
@@ -402,6 +418,7 @@ h3 {
 .metric-card strong {
     font-size: 26px;
     line-height: 1.05;
+    overflow-wrap: anywhere;
 }
 
 .metric-card.compact strong {
@@ -648,12 +665,13 @@ tbody tr:hover {
 
 .row-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 7px;
 }
 
 .row-action {
-    min-height: 30px;
-    padding: 0 8px;
+    min-height: 36px;
+    padding: 0 10px;
     border: 1px solid var(--border);
     background: var(--surface-2);
     color: var(--text);
@@ -756,28 +774,79 @@ tbody tr:hover {
 
 @media (max-width: 860px) {
     .app-shell {
-        grid-template-columns: 1fr;
+        display: block;
     }
 
     .sidebar {
-        position: relative;
+        position: sticky;
+        top: 0;
+        z-index: 40;
         height: auto;
         width: 100%;
         max-width: 100vw;
-        overflow: hidden;
-        padding: 14px;
+        overflow: visible;
+        padding: 12px 16px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        background: #111318;
     }
 
     .side-nav {
-        display: flex;
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 60;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         width: 100%;
         max-width: 100%;
-        overflow-x: auto;
-        padding-bottom: 2px;
+        min-height: calc(var(--mobile-nav) + env(safe-area-inset-bottom));
+        padding: 7px max(8px, env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+        border-top: 1px solid var(--border);
+        background: rgba(16, 17, 20, 0.96);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.32);
+        overflow: hidden;
     }
 
     .nav-item {
-        flex: 0 0 132px;
+        grid-template-columns: 1fr;
+        grid-template-rows: 28px 16px;
+        justify-items: center;
+        gap: 3px;
+        min-width: 0;
+        min-height: 58px;
+        padding: 5px 2px;
+        text-align: center;
+        font-size: 10px;
+        line-height: 1.1;
+    }
+
+    .nav-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .nav-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    body[data-view] .side-nav .nav-item {
+        border-color: transparent;
+        background: transparent;
+        color: var(--muted);
+    }
+
+    body[data-view="dashboard"] .side-nav .nav-item[data-view="dashboard"],
+    body[data-view="apontamentos"] .side-nav .nav-item[data-view="apontamentos"],
+    body[data-view="folha"] .side-nav .nav-item[data-view="folha"],
+    body[data-view="historico"] .side-nav .nav-item[data-view="historico"],
+    body[data-view="configuracoes"] .side-nav .nav-item[data-view="configuracoes"] {
+        border-color: rgba(71, 214, 182, 0.32);
+        background: rgba(71, 214, 182, 0.11);
+        color: var(--text);
     }
 
     .sidebar-meta {
@@ -785,13 +854,15 @@ tbody tr:hover {
     }
 
     .topbar {
-        position: relative;
+        position: static;
         align-items: flex-start;
-        padding: 18px;
+        min-height: 0;
+        padding: 16px;
+        gap: 12px;
     }
 
     .content {
-        padding: 20px 18px 32px;
+        padding: 16px 16px calc(var(--mobile-nav) + 28px + env(safe-area-inset-bottom));
     }
 
     .section-heading,
@@ -806,22 +877,46 @@ tbody tr:hover {
     .section-heading .muted {
         text-align: left;
     }
+
+    body:not([data-view="dashboard"]) .topbar-actions {
+        display: none;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    h2 {
+        font-size: 19px;
+    }
 }
 
 @media (max-width: 620px) {
-    .metric-grid,
-    .metric-grid.secondary,
+    .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .metric-grid:not(.secondary) > .metric-card:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .metric-grid.secondary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
     .payroll-grid,
     .history-list,
-    .settings-grid,
-    .form-grid {
+    .settings-grid {
         grid-template-columns: 1fr;
     }
 
-    .topbar-actions,
-    .primary-action,
-    .ghost-action {
+    .topbar-actions {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
         width: 100%;
+        align-items: center;
     }
 
     .primary-action,
@@ -829,7 +924,182 @@ tbody tr:hover {
         min-height: 44px;
     }
 
+    .topbar-actions .primary-action {
+        width: 100%;
+    }
+
     .metric-card {
         min-height: 112px;
+        padding: 14px;
+    }
+
+    .metric-card.compact {
+        min-height: 92px;
+    }
+
+    .metric-card strong {
+        font-size: 22px;
+    }
+
+    .metric-card.compact strong {
+        font-size: 18px;
+    }
+
+    .dashboard-grid,
+    .entry-layout,
+    .payroll-grid {
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .surface-panel,
+    .entry-form {
+        padding: 14px;
+    }
+
+    .panel-title {
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .form-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions .primary-action,
+    .form-actions .ghost-action {
+        width: 100%;
+    }
+
+    .table-panel {
+        padding-bottom: 14px;
+    }
+
+    .table-scroll {
+        overflow: visible;
+    }
+
+    table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tbody {
+        display: grid;
+        gap: 10px;
+    }
+
+    tr {
+        display: grid;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: #171a20;
+    }
+
+    tr.empty-row {
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    td {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--border);
+        text-align: right;
+    }
+
+    td::before {
+        content: attr(data-label);
+        color: var(--muted-2);
+        font-size: 11px;
+        font-weight: 800;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    td:first-child {
+        align-items: flex-start;
+    }
+
+    td:last-child,
+    td[colspan] {
+        border-bottom: 0;
+    }
+
+    td[colspan] {
+        display: block;
+        padding: 0;
+        text-align: center;
+    }
+
+    td[colspan]::before {
+        display: none;
+    }
+
+    .row-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px;
+    }
+
+    .row-action {
+        width: 100%;
+        min-height: 42px;
+    }
+
+    .list-row,
+    .history-row,
+    .breakdown-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .breakdown-row strong:last-child,
+    .history-row > strong {
+        text-align: left;
+    }
+
+    .setting-row {
+        min-height: 64px;
+        padding: 14px;
+    }
+
+    .toast {
+        right: 12px;
+        bottom: calc(var(--mobile-nav) + 12px + env(safe-area-inset-bottom));
+        left: 12px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 380px) {
+    .form-grid,
+    .metric-grid,
+    .metric-grid.secondary {
+        grid-template-columns: 1fr;
+    }
+
+    .system-pill {
+        display: none;
+    }
+
+    .topbar-actions {
+        grid-template-columns: 1fr;
     }
 }
