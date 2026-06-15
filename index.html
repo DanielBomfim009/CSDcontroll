@@ -3,121 +3,101 @@
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<title>SalárioPro | Dashboard</title>
 
-    <title>SalárioPro</title>
+<link rel="stylesheet" href="./assets/css/app.css">
 
-    <link rel="stylesheet"
-          href="./assets/css/app.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 </head>
 
 <body>
 
-    <aside class="sidebar">
+<div class="app">
 
-        <h2>SalárioPro</h2>
+<!-- SIDEBAR -->
+<aside class="sidebar">
 
-        <nav>
+    <div class="logo">
+        <h1>SalárioPro</h1>
+        <span>Controle Inteligente</span>
+    </div>
 
-            <button class="menu-btn">
-                Dashboard
-            </button>
+    <nav>
 
-            <button class="menu-btn">
-                Apontamentos
-            </button>
+        <button class="nav-item active">📊 Dashboard</button>
+        <button class="nav-item">⏱ Apontamentos</button>
+        <button class="nav-item">💰 Folha Prevista</button>
+        <button class="nav-item">📁 Histórico</button>
+        <button class="nav-item">⚙ Configurações</button>
 
-            <button class="menu-btn">
-                Folha Prevista
-            </button>
+    </nav>
 
-            <button class="menu-btn">
-                Histórico
-            </button>
+</aside>
 
-            <button class="menu-btn">
-                Configurações
-            </button>
+<!-- CONTEÚDO -->
+<main class="main">
 
-        </nav>
+    <header class="topbar">
 
-    </aside>
+        <div>
+            <h2>Dashboard Financeiro</h2>
+            <p id="competenciaAtual">Carregando competência...</p>
+        </div>
 
-    <main class="content">
+        <div class="status">
+            🔵 Sistema Online
+        </div>
 
-        <header>
+    </header>
 
-            <h1>
-                Dashboard
-            </h1>
+    <!-- KPIs -->
+    <section class="grid">
 
-            <span id="competenciaAtual">
-                Carregando...
-            </span>
+        <div class="card">
+            <h3>Horas Normais</h3>
+            <p id="horasNormais">0h</p>
+        </div>
 
-        </header>
+        <div class="card blue">
+            <h3>HE 60%</h3>
+            <p id="he60">0h</p>
+        </div>
 
-        <section class="cards">
+        <div class="card purple">
+            <h3>HE 70%</h3>
+            <p id="he70">0h</p>
+        </div>
 
-            <div class="card">
-                <h3>Horas Normais</h3>
-                <span id="horasNormais">
-                    0
-                </span>
-            </div>
+        <div class="card orange">
+            <h3>HE 100%</h3>
+            <p id="he100">0h</p>
+        </div>
 
-            <div class="card">
-                <h3>HE 60%</h3>
-                <span id="he60">
-                    0
-                </span>
-            </div>
+        <div class="card red">
+            <h3>Horas Faltantes</h3>
+            <p id="faltantes">0h</p>
+        </div>
 
-            <div class="card">
-                <h3>HE 70%</h3>
-                <span id="he70">
-                    0
-                </span>
-            </div>
+        <div class="card green highlight">
+            <h3>Líquido Previsto</h3>
+            <p id="liquidoPrevisto">R$ 0,00</p>
+        </div>
 
-            <div class="card">
-                <h3>HE 100%</h3>
-                <span id="he100">
-                    0
-                </span>
-            </div>
+    </section>
 
-            <div class="card">
-                <h3>Horas Faltantes</h3>
-                <span id="faltantes">
-                    0
-                </span>
-            </div>
+</main>
 
-            <div class="card destaque">
-                <h3>Líquido Previsto</h3>
-                <span id="liquidoPrevisto">
-                    R$ 0,00
-                </span>
-            </div>
+</div>
 
-        </section>
-
-    </main>
-
-    <script src="./assets/js/database/indexeddb.js"></script>
-
-    <script src="./assets/js/modules/competencia.js"></script>
-
-    <script src="./assets/js/modules/horas.js"></script>
-
-    <script src="./assets/js/modules/folha.js"></script>
-
-    <script src="./assets/js/app.js"></script>
+<script src="./assets/js/database/indexeddb.js"></script>
+<script src="./assets/js/modules/competencia.js"></script>
+<script src="./assets/js/modules/horas.js"></script>
+<script src="./assets/js/modules/folha.js"></script>
+<script src="./assets/js/app.js"></script>
 
 </body>
 
