@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>SalárioPro</title>
+
+    <link rel="stylesheet"
+          href="./assets/css/app.css">
+
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <h2>SalárioPro</h2>
+
+        <nav>
+
+            <button class="menu-btn">
+                Dashboard
+            </button>
+
+            <button class="menu-btn">
+                Apontamentos
+            </button>
+
+            <button class="menu-btn">
+                Folha Prevista
+            </button>
+
+            <button class="menu-btn">
+                Histórico
+            </button>
+
+            <button class="menu-btn">
+                Configurações
+            </button>
+
+        </nav>
+
+    </aside>
+
+    <main class="content">
+
+        <header>
+
+            <h1>
+                Dashboard
+            </h1>
+
+            <span id="competenciaAtual">
+                Carregando...
+            </span>
+
+        </header>
+
+        <section class="cards">
+
+            <div class="card">
+                <h3>Horas Normais</h3>
+                <span id="horasNormais">
+                    0
+                </span>
+            </div>
+
+            <div class="card">
+                <h3>HE 60%</h3>
+                <span id="he60">
+                    0
+                </span>
+            </div>
+
+            <div class="card">
+                <h3>HE 70%</h3>
+                <span id="he70">
+                    0
+                </span>
+            </div>
+
+            <div class="card">
+                <h3>HE 100%</h3>
+                <span id="he100">
+                    0
+                </span>
+            </div>
+
+            <div class="card">
+                <h3>Horas Faltantes</h3>
+                <span id="faltantes">
+                    0
+                </span>
+            </div>
+
+            <div class="card destaque">
+                <h3>Líquido Previsto</h3>
+                <span id="liquidoPrevisto">
+                    R$ 0,00
+                </span>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="./assets/js/database/indexeddb.js"></script>
+
+    <script src="./assets/js/modules/competencia.js"></script>
+
+    <script src="./assets/js/modules/horas.js"></script>
+
+    <script src="./assets/js/modules/folha.js"></script>
+
+    <script src="./assets/js/app.js"></script>
+
+</body>
+
+</html>
