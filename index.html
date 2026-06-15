@@ -1,104 +1,321 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SalárioPro | Dashboard</title>
-
-<link rel="stylesheet" href="./assets/css/app.css">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101114">
+    <meta name="description" content="SalarioPro - controle financeiro de horas trabalhadas com projecao salarial em tempo real.">
+    <title>SalarioPro | Dashboard</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./assets/img/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./assets/css/app.css">
 </head>
-
 <body>
+    <div class="app-shell">
+        <aside class="sidebar" aria-label="Navegacao principal">
+            <a class="brand" href="#dashboard" aria-label="Ir para dashboard">
+                <span class="brand-mark" aria-hidden="true">SP</span>
+                <span>
+                    <strong>SalarioPro</strong>
+                    <small>PWA financeiro</small>
+                </span>
+            </a>
 
-<div class="app">
+            <nav class="side-nav">
+                <button class="nav-item is-active" type="button" data-view="dashboard">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 13h7V4H4v9Zm9 7h7V4h-7v16ZM4 20h7v-5H4v5Z"/></svg>
+                    </span>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" type="button" data-view="apontamentos">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M7 3h10v2h3v16H4V5h3V3Zm10 4H7v2h10V7Zm0 4H7v2h10v-2Zm-4 4H7v2h6v-2Z"/></svg>
+                    </span>
+                    <span>Apontamentos</span>
+                </button>
+                <button class="nav-item" type="button" data-view="folha">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4Zm3 4v2h10V8H7Zm0 4v2h7v-2H7Zm0 4v2h10v-2H7Z"/></svg>
+                    </span>
+                    <span>Folha prevista</span>
+                </button>
+                <button class="nav-item" type="button" data-view="historico">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10h-2a8 8 0 1 1-2.34-5.66L15 9h7V2l-2.93 2.93A9.96 9.96 0 0 0 12 2Zm-1 5h2v6l5 3-1 1.73-6-3.6V7Z"/></svg>
+                    </span>
+                    <span>Historico</span>
+                </button>
+                <button class="nav-item" type="button" data-view="configuracoes">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65-2-3.46-2.49 1a7.28 7.28 0 0 0-1.69-.98L15 3h-4l-.36 2.93c-.6.24-1.17.57-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65 2 3.46 2.49-1c.52.41 1.09.74 1.69.98L11 21h4l.36-2.93c.6-.24 1.17-.57 1.69-.98l2.49 1 2-3.46-2.11-1.65ZM13 15.73A4 4 0 1 1 13 8a4 4 0 0 1 0 7.73Z"/></svg>
+                    </span>
+                    <span>Configuracoes</span>
+                </button>
+            </nav>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
+            <div class="sidebar-meta">
+                <span>R$ 36,35/h</span>
+                <strong>30%</strong>
+            </div>
+        </aside>
 
-    <div class="logo">
-        <h1>SalárioPro</h1>
-        <span>Controle Inteligente</span>
+        <div class="workspace">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">Competencia atual</p>
+                    <h1 id="pageTitle">Dashboard financeiro</h1>
+                    <p id="competenciaAtual" class="muted">Carregando competencia...</p>
+                </div>
+                <div class="topbar-actions">
+                    <span class="system-pill" id="syncStatus">Offline-ready</span>
+                    <button class="primary-action" type="button" id="newEntryBtn">
+                        <span aria-hidden="true">+</span>
+                        Novo ponto
+                    </button>
+                </div>
+            </header>
+
+            <main class="content">
+                <section class="view is-active" data-panel="dashboard" aria-labelledby="dashboardTitle">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Visao geral</p>
+                            <h2 id="dashboardTitle">Projecao em tempo real</h2>
+                        </div>
+                        <p id="dashboardSubtitle" class="muted">Sem apontamentos</p>
+                    </div>
+
+                    <div class="metric-grid">
+                        <article class="metric-card metric-income">
+                            <span class="metric-label">Liquido previsto</span>
+                            <strong id="liquidoPrevisto">R$ 0,00</strong>
+                            <small id="liquidoHint">Proventos R$ 0,00</small>
+                        </article>
+                        <article class="metric-card">
+                            <span class="metric-label">Bruto projetado</span>
+                            <strong id="brutoPrevisto">R$ 0,00</strong>
+                            <small id="brutoHint">Descontos R$ 0,00</small>
+                        </article>
+                        <article class="metric-card">
+                            <span class="metric-label">Horas normais</span>
+                            <strong id="horasNormais">0h</strong>
+                            <small id="jornadaHint">Jornada 0h</small>
+                        </article>
+                        <article class="metric-card metric-alert">
+                            <span class="metric-label">Horas faltantes</span>
+                            <strong id="faltantes">0h</strong>
+                            <small id="faltasHint">0 dia(s)</small>
+                        </article>
+                    </div>
+
+                    <div class="metric-grid secondary">
+                        <article class="metric-card compact">
+                            <span class="metric-label">HE 60%</span>
+                            <strong id="he60">0h</strong>
+                        </article>
+                        <article class="metric-card compact">
+                            <span class="metric-label">HE 70%</span>
+                            <strong id="he70">0h</strong>
+                        </article>
+                        <article class="metric-card compact">
+                            <span class="metric-label">HE 100%</span>
+                            <strong id="he100">0h</strong>
+                        </article>
+                        <article class="metric-card compact">
+                            <span class="metric-label">Periculosidade</span>
+                            <strong id="periculosidadeTotal">R$ 0,00</strong>
+                        </article>
+                        <article class="metric-card compact">
+                            <span class="metric-label">RSR extras</span>
+                            <strong id="rsrTotal">R$ 0,00</strong>
+                        </article>
+                        <article class="metric-card compact">
+                            <span class="metric-label">Registros</span>
+                            <strong id="diasRegistrados">0</strong>
+                        </article>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <section class="surface-panel" aria-labelledby="mixTitle">
+                            <div class="panel-title">
+                                <h3 id="mixTitle">Composicao de horas</h3>
+                                <span id="totalHorasMix">0h totais</span>
+                            </div>
+                            <div class="bars" id="mixBars"></div>
+                        </section>
+
+                        <section class="surface-panel" aria-labelledby="recentTitle">
+                            <div class="panel-title">
+                                <h3 id="recentTitle">Ultimos apontamentos</h3>
+                                <button class="text-button" type="button" data-view-shortcut="apontamentos">Ver todos</button>
+                            </div>
+                            <div class="recent-list" id="recentEntries"></div>
+                        </section>
+                    </div>
+                </section>
+
+                <section class="view" data-panel="apontamentos" aria-labelledby="apontamentosTitle">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Operacao diaria</p>
+                            <h2 id="apontamentosTitle">Apontamentos</h2>
+                        </div>
+                    </div>
+
+                    <div class="entry-layout">
+                        <form class="entry-form" id="apontamentoForm">
+                            <input type="hidden" id="apontamentoId">
+
+                            <label>
+                                Data
+                                <input type="date" id="data" required>
+                            </label>
+
+                            <div class="form-grid">
+                                <label>
+                                    Entrada
+                                    <input type="time" id="entrada" value="07:00" required>
+                                </label>
+                                <label>
+                                    Saida almoco
+                                    <input type="time" id="saidaAlmoco" value="12:00" required>
+                                </label>
+                                <label>
+                                    Retorno almoco
+                                    <input type="time" id="retornoAlmoco" value="13:00" required>
+                                </label>
+                                <label>
+                                    Saida
+                                    <input type="time" id="saida" value="17:00" required>
+                                </label>
+                            </div>
+
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="feriado">
+                                <span>Feriado trabalhado (HE 100%)</span>
+                            </label>
+
+                            <div class="form-preview" id="formPreview">
+                                <span>Previa do dia</span>
+                                <strong>Sem previa</strong>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="primary-action" type="submit" id="saveEntryBtn">Salvar apontamento</button>
+                                <button class="ghost-action" type="button" id="cancelEditBtn">Cancelar edicao</button>
+                            </div>
+                        </form>
+
+                        <section class="surface-panel table-panel" aria-labelledby="tableTitle">
+                            <div class="panel-title">
+                                <h3 id="tableTitle">Lancamentos da competencia</h3>
+                                <span id="tableCount">0 registros</span>
+                            </div>
+                            <div class="table-scroll">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Jornada</th>
+                                            <th>Trabalhadas</th>
+                                            <th>Extras</th>
+                                            <th>Falta</th>
+                                            <th>Acoes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="apontamentosTable"></tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                </section>
+
+                <section class="view" data-panel="folha" aria-labelledby="folhaTitle">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Simulador</p>
+                            <h2 id="folhaTitle">Folha prevista</h2>
+                        </div>
+                    </div>
+
+                    <div class="payroll-grid">
+                        <article class="metric-card metric-income total-payroll">
+                            <span class="metric-label">Liquido</span>
+                            <strong id="folhaLiquido">R$ 0,00</strong>
+                            <small id="folhaResumo">0 registros</small>
+                        </article>
+                        <section class="surface-panel">
+                            <div class="panel-title">
+                                <h3>Proventos</h3>
+                                <span id="proventosTotal">R$ 0,00</span>
+                            </div>
+                            <div class="breakdown-list" id="proventosList"></div>
+                        </section>
+                        <section class="surface-panel">
+                            <div class="panel-title">
+                                <h3>Descontos</h3>
+                                <span id="descontosTotal">R$ 0,00</span>
+                            </div>
+                            <div class="breakdown-list" id="descontosList"></div>
+                        </section>
+                    </div>
+                </section>
+
+                <section class="view" data-panel="historico" aria-labelledby="historicoTitle">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Arquivo local</p>
+                            <h2 id="historicoTitle">Historico</h2>
+                        </div>
+                    </div>
+                    <div class="history-list" id="historicoLista"></div>
+                </section>
+
+                <section class="view" data-panel="configuracoes" aria-labelledby="configTitle">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Parametros</p>
+                            <h2 id="configTitle">Configuracoes de calculo</h2>
+                        </div>
+                    </div>
+                    <div class="settings-grid">
+                        <article class="setting-row">
+                            <span>Valor hora</span>
+                            <strong id="configValorHora">R$ 36,35</strong>
+                        </article>
+                        <article class="setting-row">
+                            <span>Periculosidade</span>
+                            <strong>30%</strong>
+                        </article>
+                        <article class="setting-row">
+                            <span>Segunda a quinta</span>
+                            <strong>9h liquidas</strong>
+                        </article>
+                        <article class="setting-row">
+                            <span>Sexta-feira</span>
+                            <strong>8h liquidas</strong>
+                        </article>
+                        <article class="setting-row">
+                            <span>Sabado</span>
+                            <strong>HE 70%</strong>
+                        </article>
+                        <article class="setting-row">
+                            <span>Domingo / feriado</span>
+                            <strong>HE 100%</strong>
+                        </article>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 
-    <nav>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-        <button class="nav-item active">📊 Dashboard</button>
-        <button class="nav-item">⏱ Apontamentos</button>
-        <button class="nav-item">💰 Folha Prevista</button>
-        <button class="nav-item">📁 Histórico</button>
-        <button class="nav-item">⚙ Configurações</button>
-
-    </nav>
-
-</aside>
-
-<!-- CONTEÚDO -->
-<main class="main">
-
-    <header class="topbar">
-
-        <div>
-            <h2>Dashboard Financeiro</h2>
-            <p id="competenciaAtual">Carregando competência...</p>
-        </div>
-
-        <div class="status">
-            🔵 Sistema Online
-        </div>
-
-    </header>
-
-    <!-- KPIs -->
-    <section class="grid">
-
-        <div class="card">
-            <h3>Horas Normais</h3>
-            <p id="horasNormais">0h</p>
-        </div>
-
-        <div class="card blue">
-            <h3>HE 60%</h3>
-            <p id="he60">0h</p>
-        </div>
-
-        <div class="card purple">
-            <h3>HE 70%</h3>
-            <p id="he70">0h</p>
-        </div>
-
-        <div class="card orange">
-            <h3>HE 100%</h3>
-            <p id="he100">0h</p>
-        </div>
-
-        <div class="card red">
-            <h3>Horas Faltantes</h3>
-            <p id="faltantes">0h</p>
-        </div>
-
-        <div class="card green highlight">
-            <h3>Líquido Previsto</h3>
-            <p id="liquidoPrevisto">R$ 0,00</p>
-        </div>
-
-    </section>
-
-</main>
-
-</div>
-
-<script src="./assets/js/database/indexeddb.js"></script>
-<script src="./assets/js/modules/competencia.js"></script>
-<script src="./assets/js/modules/horas.js"></script>
-<script src="./assets/js/modules/folha.js"></script>
-<script src="./assets/js/app.js"></script>
-
+    <script src="./assets/js/database/indexeddb.js"></script>
+    <script src="./assets/js/modules/competencia.js"></script>
+    <script src="./assets/js/modules/horas.js"></script>
+    <script src="./assets/js/modules/folha.js"></script>
+    <script src="./assets/js/app.js"></script>
 </body>
-
 </html>

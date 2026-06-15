@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SalarioPro">
+    <rect width="256" height="256" rx="48" fill="#101114"/>
+    <rect x="30" y="30" width="196" height="196" rx="28" fill="#1a1d23" stroke="#47d6b6" stroke-width="8"/>
+    <path d="M72 87h112v22H72V87Zm0 42h112v22H72v-22Zm0 42h72v22H72v-22Z" fill="#f4f5f7"/>
+    <path d="M170 166c0-14 11-25 25-25h5v20h-5c-3 0-5 2-5 5s2 5 5 5h10v20h-10c-14 0-25-11-25-25Z" fill="#47d6b6"/>
+</svg>
