@@ -5,7 +5,8 @@ const App = {
         todosApontamentos: [],
         view: "dashboard",
         editId: null,
-        pendingDeleteId: null
+        pendingDeleteId: null,
+        importRecords: []
     },
 
     async init() {
@@ -47,6 +48,14 @@ const App = {
             cancelEditBtn: this.$("#cancelEditBtn"),
             saveEntryBtn: this.$("#saveEntryBtn"),
             newEntryBtn: this.$("#newEntryBtn"),
+            openImportBtn: this.$("#openImportBtn"),
+            importModal: this.$("#importModal"),
+            closeImportBtn: this.$("#closeImportBtn"),
+            cancelImportBtn: this.$("#cancelImportBtn"),
+            importFile: this.$("#importFile"),
+            importFileName: this.$("#importFileName"),
+            importSummary: this.$("#importSummary"),
+            confirmImportBtn: this.$("#confirmImportBtn"),
             toast: this.$("#toast")
         };
     },
@@ -68,6 +77,16 @@ const App = {
 
         this.dom.form.addEventListener("submit", event => this.salvarApontamento(event));
         this.dom.cancelEditBtn.addEventListener("click", () => this.resetForm());
+        this.dom.openImportBtn.addEventListener("click", () => this.openImportModal());
+        this.dom.closeImportBtn.addEventListener("click", () => this.closeImportModal());
+        this.dom.cancelImportBtn.addEventListener("click", () => this.closeImportModal());
+        this.dom.confirmImportBtn.addEventListener("click", () => this.importarRegistros());
+        this.dom.importFile.addEventListener("change", event => this.handleImportFile(event));
+        this.dom.importModal.addEventListener("click", event => {
+            if (event.target === this.dom.importModal) {
+                this.closeImportModal();
+            }
+        });
 
         ["data", "entrada", "saidaAlmoco", "retornoAlmoco", "saida", "feriado"].forEach(id => {
             this.dom[id].addEventListener("input", () => this.renderPreview());
@@ -176,6 +195,326 @@ const App = {
         this.state.pendingDeleteId = null;
         this.resetForm(false);
         this.render();
+    },
+
+    openImportModal() {
+        this.state.importRecords = [];
+        this.dom.importFile.value = "";
+        this.dom.importFileName.textContent = "CSV ou TXT";
+        this.dom.importSummary.textContent = "Nenhum arquivo selecionado.";
+        this.dom.confirmImportBtn.disabled = true;
+        this.dom.importModal.classList.add("is-visible");
+        this.dom.importModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+    },
+
+    closeImportModal() {
+        this.dom.importModal.classList.remove("is-visible");
+        this.dom.importModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+    },
+
+    async handleImportFile(event) {
+        const [file] = event.target.files;
+
+        if (!file) {
+            return;
+        }
+
+        this.dom.importFileName.textContent = file.name;
+        this.dom.importSummary.textContent = "Processando arquivo...";
+        this.dom.confirmImportBtn.disabled = true;
+
+        try {
+            const texto = await file.text();
+            const registros = this.parseImportText(texto);
+            this.state.importRecords = registros;
+            this.renderImportSummary(registros);
+            this.dom.confirmImportBtn.disabled = registros.length === 0;
+        } catch (error) {
+            console.error(error);
+            this.state.importRecords = [];
+            this.dom.importSummary.textContent = "Arquivo não reconhecido.";
+            this.showToast("Não foi possível importar esse arquivo.");
+        }
+    },
+
+    parseImportText(texto) {
+        const linhas = this.parseCsv(texto)
+            .map(linha => linha.map(celula => celula.trim()))
+            .filter(linha => linha.some(Boolean));
+
+        if (linhas.length === 0) {
+            return [];
+        }
+
+        const cabecalho = linhas[0].map(celula => this.normalizarCabecalho(celula));
+        const temCabecalho = cabecalho.some(celula => ["data", "dia", "dataponto"].includes(celula));
+        const dados = temCabecalho ? linhas.slice(1) : linhas;
+        const registros = [];
+
+        dados.forEach(linha => {
+            const registro = this.mapImportRow(linha, temCabecalho ? cabecalho : null);
+
+            if (registro) {
+                registros.push(registro);
+            }
+        });
+
+        return Array.from(new Map(registros.map(registro => [registro.data, registro])).values())
+            .sort((a, b) => b.data.localeCompare(a.data));
+    },
+
+    parseCsv(texto) {
+        const delimitador = this.detectarDelimitador(texto);
+        const linhas = texto.replace(/\r/g, "").split("\n");
+
+        return linhas.map(linha => {
+            const colunas = [];
+            let atual = "";
+            let dentroAspas = false;
+
+            for (let i = 0; i < linha.length; i += 1) {
+                const char = linha[i];
+                const proximo = linha[i + 1];
+
+                if (char === '"' && dentroAspas && proximo === '"') {
+                    atual += '"';
+                    i += 1;
+                    continue;
+                }
+
+                if (char === '"') {
+                    dentroAspas = !dentroAspas;
+                    continue;
+                }
+
+                if (char === delimitador && !dentroAspas) {
+                    colunas.push(atual);
+                    atual = "";
+                    continue;
+                }
+
+                atual += char;
+            }
+
+            colunas.push(atual);
+            return colunas;
+        });
+    },
+
+    detectarDelimitador(texto) {
+        const amostra = texto.split(/\r?\n/).slice(0, 5).join("\n");
+        const opcoes = [";", ",", "\t"];
+
+        return opcoes
+            .map(delimitador => ({
+                delimitador,
+                ocorrencias: (amostra.match(new RegExp(delimitador === "\t" ? "\\t" : `\\${delimitador}`, "g")) || []).length
+            }))
+            .sort((a, b) => b.ocorrencias - a.ocorrencias)[0].delimitador;
+    },
+
+    mapImportRow(linha, cabecalho) {
+        const valor = (aliases, indicePadrao) => {
+            if (!cabecalho) {
+                return linha[indicePadrao] || "";
+            }
+
+            const indice = this.findImportColumn(cabecalho, aliases);
+            return indice >= 0 ? linha[indice] || "" : "";
+        };
+
+        const data = this.normalizarDataImportacao(valor(["data", "dia", "dataponto", "datadoapontamento"], 0));
+        const entrada = this.normalizarHorario(valor(["entrada", "inicio", "horaentrada"], 1));
+        const saidaAlmoco = this.normalizarHorario(valor(["saidaalmoco", "iniciointervalo", "saidaintervalo"], 2)) || "12:00";
+        const retornoAlmoco = this.normalizarHorario(valor(["retornoalmoco", "voltaalmoco", "fimintervalo", "retornointervalo"], 3)) || "13:00";
+        const saida = this.normalizarHorario(valor(["saida", "fim", "horasaida"], 4));
+        const feriado = this.normalizarBoolean(valor(["feriado", "he100", "domingoeferiado"], 5));
+
+        if (!data || !entrada || !saida) {
+            return null;
+        }
+
+        return {
+            data,
+            entrada,
+            saidaAlmoco,
+            retornoAlmoco,
+            saida,
+            feriado,
+            competencia: Competencia.getCompetencia(data).codigo
+        };
+    },
+
+    findImportColumn(cabecalho, aliases) {
+        for (const alias of aliases) {
+            const indice = cabecalho.findIndex(celula => celula === alias);
+
+            if (indice >= 0) {
+                return indice;
+            }
+        }
+
+        return cabecalho.findIndex(celula => aliases.some(alias => alias.length > 5 && celula.includes(alias)));
+    },
+
+    normalizarCabecalho(valor) {
+        return String(valor || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+    },
+
+    normalizarDataImportacao(valor) {
+        const texto = String(valor || "").trim();
+
+        if (!texto) {
+            return "";
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+            return texto;
+        }
+
+        const dataSeparada = texto.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+
+        if (dataSeparada) {
+            const [, dia, mes, ano] = dataSeparada;
+            const anoCompleto = ano.length === 2 ? `20${ano}` : ano;
+            return `${anoCompleto}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+        }
+
+        const dataExtenso = texto
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .match(/^(\d{1,2})\s+de\s+([a-z]{3,})\.?\s+de\s+(\d{4})$/);
+
+        if (dataExtenso) {
+            const meses = {
+                jan: "01", janeiro: "01", fev: "02", fevereiro: "02", mar: "03", marco: "03",
+                abr: "04", abril: "04", mai: "05", maio: "05", jun: "06", junho: "06",
+                jul: "07", julho: "07", ago: "08", agosto: "08", set: "09", setembro: "09",
+                out: "10", outubro: "10", nov: "11", novembro: "11", dez: "12", dezembro: "12"
+            };
+            const [, dia, mes, ano] = dataExtenso;
+            const mesNumero = meses[mes];
+
+            if (mesNumero) {
+                return `${ano}-${mesNumero}-${dia.padStart(2, "0")}`;
+            }
+        }
+
+        const serial = Number(texto.replace(",", "."));
+
+        if (Number.isFinite(serial) && serial > 25000) {
+            const data = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            return Competencia.formatarDataISO(data);
+        }
+
+        return "";
+    },
+
+    normalizarHorario(valor) {
+        const texto = String(valor || "").trim().toLowerCase();
+
+        if (!texto) {
+            return "";
+        }
+
+        const comSeparador = texto
+            .replace(/\s/g, "")
+            .replace("h", ":")
+            .replace(".", ":");
+        const relogio = comSeparador.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+
+        if (relogio) {
+            const horas = Number(relogio[1]);
+            const minutos = Number(relogio[2] || 0);
+
+            if (horas >= 0 && horas <= 23 && minutos >= 0 && minutos <= 59) {
+                return `${String(horas).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
+            }
+        }
+
+        const numero = Number(texto.replace(",", "."));
+
+        if (Number.isFinite(numero)) {
+            const minutos = numero > 0 && numero <= 1
+                ? Math.round(numero * 24 * 60)
+                : Math.round(numero * 60);
+            const horas = Math.floor(minutos / 60) % 24;
+            const resto = minutos % 60;
+
+            return `${String(horas).padStart(2, "0")}:${String(resto).padStart(2, "0")}`;
+        }
+
+        return "";
+    },
+
+    normalizarBoolean(valor) {
+        return ["1", "s", "sim", "true", "x", "he100", "feriado"]
+            .includes(String(valor || "").trim().toLowerCase());
+    },
+
+    renderImportSummary(registros) {
+        if (!registros.length) {
+            this.dom.importSummary.textContent = "Nenhum registro válido encontrado.";
+            return;
+        }
+
+        const primeiro = registros[registros.length - 1];
+        const ultimo = registros[0];
+        this.dom.importSummary.innerHTML = `
+            <strong>${registros.length} registro(s) encontrados</strong>
+            <span>${Competencia.formatarData(primeiro.data)} até ${Competencia.formatarData(ultimo.data)}</span>
+        `;
+    },
+
+    async importarRegistros() {
+        if (!this.state.importRecords.length) {
+            return;
+        }
+
+        const agora = new Date().toISOString();
+        const existentes = new Map(this.state.todosApontamentos.map(registro => [registro.data, registro]));
+        let criados = 0;
+        let atualizados = 0;
+
+        for (const registro of this.state.importRecords) {
+            const existente = existentes.get(registro.data);
+            const calculo = Horas.calcularDia(
+                registro.data,
+                registro.entrada,
+                registro.saidaAlmoco,
+                registro.retornoAlmoco,
+                registro.saida,
+                { feriado: registro.feriado }
+            );
+            const payload = {
+                ...registro,
+                calculo,
+                atualizadoEm: agora
+            };
+
+            if (existente) {
+                payload.id = existente.id;
+                payload.criadoEm = existente.criadoEm || agora;
+                await DB.update(STORES.APONTAMENTOS, payload);
+                atualizados += 1;
+            } else {
+                payload.criadoEm = agora;
+                await DB.add(STORES.APONTAMENTOS, payload);
+                criados += 1;
+            }
+        }
+
+        await this.carregarApontamentos();
+        this.closeImportModal();
+        this.render();
+        this.showToast(`${criados + atualizados} registro(s) importados.`);
     },
 
     editarApontamento(id) {

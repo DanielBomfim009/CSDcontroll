@@ -161,6 +161,7 @@
                             <p class="eyebrow">Operação diária</p>
                             <h2 id="apontamentosTitle">Apontamentos</h2>
                         </div>
+                        <button class="ghost-action compact-action" type="button" id="openImportBtn">Importar folha</button>
                     </div>
 
                     <div class="entry-layout">
@@ -311,6 +312,33 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <div class="modal-layer" id="importModal" aria-hidden="true">
+        <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+            <div class="modal-head">
+                <div>
+                    <p class="eyebrow">Carga mensal</p>
+                    <h2 id="importTitle">Importar folha</h2>
+                </div>
+                <button class="icon-button" type="button" id="closeImportBtn" aria-label="Fechar importação">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5Zm11.2 0L19 6.4 6.4 19 5 17.6 17.6 5Z"/></svg>
+                </button>
+            </div>
+
+            <label class="file-drop">
+                <input type="file" id="importFile" accept=".csv,.txt,text/csv,text/plain">
+                <span>Selecionar arquivo</span>
+                <strong id="importFileName">CSV ou TXT</strong>
+            </label>
+
+            <div class="import-summary" id="importSummary">Nenhum arquivo selecionado.</div>
+
+            <div class="form-actions">
+                <button class="primary-action" type="button" id="confirmImportBtn" disabled>Importar registros</button>
+                <button class="ghost-action" type="button" id="cancelImportBtn">Cancelar</button>
+            </div>
+        </section>
+    </div>
 
     <script src="./assets/js/database/indexeddb.js"></script>
     <script src="./assets/js/modules/competencia.js"></script>

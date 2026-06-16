@@ -57,6 +57,7 @@ body {
 button,
 input {
     font: inherit;
+    min-width: 0;
 }
 
 button {
@@ -329,6 +330,15 @@ h3 {
     transform: translateY(-1px);
 }
 
+.primary-action:disabled,
+.ghost-action:disabled,
+.row-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+    box-shadow: none;
+}
+
 .ghost-action {
     padding: 0 13px;
     border: 1px solid var(--border);
@@ -353,6 +363,28 @@ h3 {
     border-color: #dbe6ff;
     background: var(--blue-soft);
     outline: none;
+}
+
+.compact-action {
+    min-height: 38px;
+}
+
+.icon-button {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.icon-button svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
 }
 
 .content {
@@ -591,6 +623,7 @@ h3 {
 label {
     display: grid;
     gap: 7px;
+    min-width: 0;
     color: #465468;
     font-size: 12px;
     font-weight: 900;
@@ -598,6 +631,8 @@ label {
 
 input {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     min-height: 44px;
     border: 1px solid #d8e1eb;
     border-radius: var(--radius);
@@ -606,6 +641,19 @@ input {
     padding: 0 12px;
     outline: none;
     box-shadow: inset 0 1px 0 rgba(31, 44, 71, 0.02);
+}
+
+input[type="date"],
+input[type="time"] {
+    display: block;
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: 44px;
+}
+
+input::-webkit-date-and-time-value {
+    min-width: 0;
+    text-align: left;
 }
 
 input:focus {
@@ -617,6 +665,10 @@ input:focus {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+}
+
+.form-grid > label {
+    min-width: 0;
 }
 
 .checkbox-row {
@@ -771,6 +823,113 @@ tbody tr:hover {
     text-align: right;
 }
 
+body.modal-open {
+    overflow: hidden;
+}
+
+.modal-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: end center;
+    padding: 18px;
+    background: rgba(15, 23, 42, 0.28);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
+
+.modal-layer.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-card {
+    display: grid;
+    width: min(460px, 100%);
+    max-height: min(620px, calc(100vh - 36px));
+    gap: 14px;
+    overflow: auto;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
+    transform: translateY(14px);
+    transition: transform 180ms ease;
+}
+
+.modal-layer.is-visible .modal-card {
+    transform: translateY(0);
+}
+
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.file-drop {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    min-height: 112px;
+    place-items: center;
+    padding: 18px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--muted);
+    text-align: center;
+    cursor: pointer;
+}
+
+.file-drop input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-drop span {
+    color: var(--accent-strong);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.file-drop strong {
+    max-width: 100%;
+    color: var(--text);
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.import-summary {
+    display: grid;
+    gap: 5px;
+    min-height: 58px;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.import-summary strong {
+    color: var(--text);
+}
+
+.import-summary span {
+    color: var(--muted);
+}
+
 .toast {
     position: fixed;
     right: 18px;
@@ -913,6 +1072,10 @@ tbody tr:hover {
     .section-heading {
         align-items: flex-start;
         margin-bottom: 14px;
+    }
+
+    .section-heading .compact-action {
+        width: 100%;
     }
 
     .section-heading .muted {
@@ -1121,6 +1284,15 @@ tbody tr:hover {
     .setting-row {
         min-height: 64px;
         padding: 14px;
+    }
+
+    .modal-layer {
+        padding: 12px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .modal-card {
+        max-height: calc(100vh - 24px - env(safe-area-inset-bottom));
     }
 
     .toast {
