@@ -7,6 +7,8 @@ class FolhaService {
     constructor() {
         this.VALOR_HORA = 36.35;
         this.HORAS_BASE_MENSAL = 220;
+        this.DIAS_BASE_MENSAL = 30;
+        this.DATA_ADMISSAO = "2025-10-07";
         this.PERICULOSIDADE = 0.30;
         this.FGTS = 0.08;
         this.DEPENDENTES_IRRF = 1;
@@ -41,6 +43,31 @@ class FolhaService {
 
     calcularSalarioNormal(horasBase = this.HORAS_BASE_MENSAL) {
         return this.arredondar((horasBase || 0) * this.VALOR_HORA);
+    }
+
+    obterDataAdmissao() {
+        const [ano, mes, dia] = this.DATA_ADMISSAO.split("-").map(Number);
+        return new Date(ano, mes - 1, dia);
+    }
+
+    obterDiasMesCompetencia(competencia = null) {
+        const referencia = competencia?.fim || new Date();
+        return new Date(referencia.getFullYear(), referencia.getMonth() + 1, 0).getDate();
+    }
+
+    calcularHorasBaseCompetencia(competencia = null) {
+        const referencia = competencia?.fim || new Date();
+        const ano = referencia.getFullYear();
+        const mes = referencia.getMonth();
+        const diasMes = this.obterDiasMesCompetencia(competencia);
+        let diasConsiderados = diasMes;
+        const admissao = this.obterDataAdmissao();
+
+        if (admissao.getFullYear() === ano && admissao.getMonth() === mes) {
+            diasConsiderados = Math.max(0, diasMes - admissao.getDate() + 1);
+        }
+
+        return this.arredondar((this.HORAS_BASE_MENSAL / this.DIAS_BASE_MENSAL) * diasConsiderados);
     }
 
     calcularPericulosidade(base) {
@@ -191,7 +218,7 @@ class FolhaService {
     }
 
     calcularFolha(totaisHoras = {}, competencia = null) {
-        const horasBaseMensal = this.HORAS_BASE_MENSAL;
+        const horasBaseMensal = this.calcularHorasBaseCompetencia(competencia);
         const salarioNormal = this.calcularSalarioNormal(horasBaseMensal);
         const periculosidade = this.calcularPericulosidade(salarioNormal);
         const he60 = this.calcularHE60(totaisHoras.he60);
