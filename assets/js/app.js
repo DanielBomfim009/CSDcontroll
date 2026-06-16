@@ -336,6 +336,7 @@ const App = {
 
         return {
             ...registro,
+            calculo: registro.calculo || null,
             competencia,
             feriado: Boolean(registro.feriado)
         };
@@ -609,19 +610,28 @@ const App = {
             const [, diaSemanaTexto, dia, mes, anoLinha, restante] = match;
             const tokens = restante.split(/\s+/);
             const pontos = tokens.slice(0, 4);
+            const colunasApuradas = tokens.slice(4);
 
-            if (pontos.length < 4 || pontos.some(token => token === "-")) {
+            if (colunasApuradas.length < 7) {
                 return;
             }
 
-            const entrada = this.normalizarHorario(pontos[0]);
-            const saidaAlmoco = this.normalizarHorario(pontos[1]);
-            const retornoAlmoco = this.normalizarHorario(pontos[2]);
-            const saida = this.normalizarHorario(pontos[3]);
+            const domInterjornada = this.parseDuracaoImportacao(colunasApuradas[0]);
+            const feriadoApurado = this.parseDuracaoImportacao(colunasApuradas[1]);
+            const adicionalNoturno = this.parseDuracaoImportacao(colunasApuradas[2]);
+            const he60Apurada = this.parseDuracaoImportacao(colunasApuradas[3]);
+            const he70Apurada = this.parseDuracaoImportacao(colunasApuradas[4]);
+            const faltantesApurados = Math.abs(this.parseDuracaoImportacao(colunasApuradas[5]));
+            const he100Apurada = this.parseDuracaoImportacao(colunasApuradas[6]);
 
-            if (!entrada || !saidaAlmoco || !retornoAlmoco || !saida) {
+            if (pontos.length < 4) {
                 return;
             }
+
+            const entrada = pontos[0] === "-" ? "" : this.normalizarHorario(pontos[0]);
+            const saidaAlmoco = pontos[1] === "-" ? "" : this.normalizarHorario(pontos[1]);
+            const retornoAlmoco = pontos[2] === "-" ? "" : this.normalizarHorario(pontos[2]);
+            const saida = pontos[3] === "-" ? "" : this.normalizarHorario(pontos[3]);
 
             const data = this.normalizarDataComPeriodo(dia, mes, anoLinha, periodo);
 
@@ -634,15 +644,38 @@ const App = {
                 .replace(/[\u0300-\u036f]/g, "")
                 .toLowerCase();
             const feriado = diaSemana === "dom" || /\bferiado\b/i.test(linha);
+            const jornada = Horas.obterJornadaEsperada(data, { feriado });
+            const he60 = this.arredondarDuracaoImportacao(he60Apurada);
+            const he70 = this.arredondarDuracaoImportacao(he70Apurada);
+            const he100 = this.arredondarDuracaoImportacao(he100Apurada || feriadoApurado || domInterjornada);
+            const horasFaltantes = this.arredondarDuracaoImportacao(faltantesApurados);
+            const horasNormais = Math.max(0, Horas.arredondar(jornada - horasFaltantes));
+            const horasTrabalhadas = Horas.arredondar(horasNormais + he60 + he70 + he100);
+
+            if (!entrada && !saida && !he60 && !he70 && !he100 && !horasFaltantes) {
+                return;
+            }
 
             registros.push({
                 data,
-                entrada,
-                saidaAlmoco,
-                retornoAlmoco,
-                saida,
+                entrada: entrada || "07:00",
+                saidaAlmoco: saidaAlmoco || "12:00",
+                retornoAlmoco: retornoAlmoco || "13:00",
+                saida: saida || "17:00",
                 feriado,
-                competencia: Competencia.getCompetencia(data).codigo
+                competencia: Competencia.getCompetencia(data).codigo,
+                calculo: {
+                    data,
+                    tipoDia: Horas.obterTipoDia(data, { feriado }),
+                    jornada: Horas.arredondar(jornada),
+                    horasTrabalhadas,
+                    horasNormais,
+                    horasFaltantes,
+                    he60,
+                    he70,
+                    he100,
+                    adicionalNoturno: this.arredondarDuracaoImportacao(adicionalNoturno)
+                }
             });
         });
 
@@ -945,6 +978,29 @@ const App = {
         return "";
     },
 
+    parseDuracaoImportacao(valor) {
+        const texto = String(valor || "").trim();
+
+        if (!texto || texto === "-") {
+            return 0;
+        }
+
+        const sinal = texto.startsWith("-") ? -1 : 1;
+        const limpo = texto.replace(/^[+-]/, "");
+        const match = limpo.match(/^(\d{1,2}):(\d{2})$/);
+
+        if (!match) {
+            return 0;
+        }
+
+        const [, horas, minutos] = match;
+        return sinal * ((Number(horas) * 60 + Number(minutos)) / 60);
+    },
+
+    arredondarDuracaoImportacao(valor) {
+        return Horas.arredondar(Math.max(0, valor || 0));
+    },
+
     normalizarBoolean(valor) {
         return ["1", "s", "sim", "true", "x", "he100", "feriado"]
             .includes(String(valor || "").trim().toLowerCase());
@@ -976,7 +1032,7 @@ const App = {
 
         for (const registro of this.state.importRecords) {
             const existente = existentes.get(registro.data);
-            const calculo = Horas.calcularDia(
+            const calculo = registro.calculo || Horas.calcularDia(
                 registro.data,
                 registro.entrada,
                 registro.saidaAlmoco,
@@ -1368,7 +1424,7 @@ const App = {
     },
 
     calcularRegistro(apontamento) {
-        return Horas.calcularDia(
+        return apontamento.calculo || Horas.calcularDia(
             apontamento.data,
             apontamento.entrada,
             apontamento.saidaAlmoco,

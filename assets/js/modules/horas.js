@@ -171,7 +171,7 @@ class HorasService {
         }
 
         apontamentos.forEach(apontamento => {
-            const calculo = this.calcularDia(
+            const calculo = apontamento.calculo || this.calcularDia(
                 apontamento.data,
                 apontamento.entrada,
                 apontamento.saidaAlmoco,
