@@ -1721,34 +1721,49 @@ const App = {
         }
 
         const totalRecebidoMes = holerite.totalRecebidoMes || holerite.liquidoReceber;
-        const itens = [
+        const cards = [
             {
-                titulo: "Previsto dia 01",
-                valor: folha.pagamentoFinal,
-                detalhe: `Mes ${Folha.moeda(folha.liquidoMes)}`
+                titulo: "Fechamento do dia 01",
+                previsto: folha.pagamentoFinal,
+                recebido: holerite.liquidoReceber,
+                destaque: this.formatarDelta(holerite.liquidoReceber - folha.pagamentoFinal)
             },
             {
-                titulo: "Recebido dia 01",
-                valor: holerite.liquidoReceber,
-                detalhe: this.formatarDelta(holerite.liquidoReceber - folha.pagamentoFinal)
+                titulo: "Total do mes",
+                previsto: folha.liquidoMes,
+                recebido: totalRecebidoMes,
+                destaque: this.formatarDelta(totalRecebidoMes - folha.liquidoMes)
             },
             {
-                titulo: "Previsto no mes",
-                valor: folha.liquidoMes,
-                detalhe: `Adiantamento ${Folha.moeda(folha.adiantamento)}`
+                titulo: "Adiantamento",
+                previsto: folha.adiantamento,
+                recebido: holerite.adiantamento,
+                destaque: this.formatarDelta(holerite.adiantamento - folha.adiantamento)
             },
             {
-                titulo: "Recebido no mes",
-                valor: totalRecebidoMes,
-                detalhe: this.formatarDelta(totalRecebidoMes - folha.liquidoMes)
+                titulo: "FGTS",
+                previsto: folha.fgts,
+                recebido: holerite.fgts,
+                destaque: this.formatarDelta(holerite.fgts - folha.fgts)
             }
         ];
 
-        this.dom.comparativoGrid.innerHTML = itens.map(item => `
-            <article class="metric-card comparison-card">
-                <span class="metric-label">${item.titulo}</span>
-                <strong>${Folha.moeda(item.valor)}</strong>
-                <small class="${this.getDeltaClass(item.detalhe)}">${item.detalhe}</small>
+        this.dom.comparativoGrid.innerHTML = cards.map(item => `
+            <article class="surface-panel comparison-card">
+                <div class="comparison-card-head">
+                    <span class="metric-label">${item.titulo}</span>
+                    <strong class="${this.getDeltaClass(item.destaque)}">${item.destaque}</strong>
+                </div>
+                <div class="comparison-card-values">
+                    <div>
+                        <span>Previsto</span>
+                        <strong>${Folha.moeda(item.previsto)}</strong>
+                    </div>
+                    <div>
+                        <span>Recebido</span>
+                        <strong>${Folha.moeda(item.recebido)}</strong>
+                    </div>
+                </div>
             </article>
         `).join("");
 
@@ -1763,17 +1778,23 @@ const App = {
             ["Total do mes", folha.liquidoMes, totalRecebidoMes]
         ];
 
-        this.dom.comparativoLista.innerHTML = linhas.map(([label, previsto, recebido]) => {
+        this.dom.comparativoLista.innerHTML = `
+            <div class="comparison-sheet comparison-sheet-head">
+                <span>Item</span>
+                <span>Previsto</span>
+                <span>Recebido</span>
+                <span>Diferenca</span>
+            </div>
+        ` + linhas.map(([label, previsto, recebido]) => {
             const delta = recebido - previsto;
 
             return `
-                <div class="comparison-row">
-                    <div>
-                        <strong>${label}</strong>
-                        <span>Previsto ${Folha.moeda(previsto)} | Recebido ${Folha.moeda(recebido)}</span>
-                    </div>
+                <div class="comparison-sheet">
+                    <strong>${label}</strong>
+                    <span>${Folha.moeda(previsto)}</span>
+                    <span>${Folha.moeda(recebido)}</span>
                     <strong class="${delta < 0 ? "delta-negative" : delta > 0 ? "delta-positive" : ""}">
-                        ${delta === 0 ? "Sem diferenca" : this.formatarDelta(delta)}
+                        ${delta === 0 ? "R$ 0,00" : this.formatarDelta(delta)}
                     </strong>
                 </div>
             `;
