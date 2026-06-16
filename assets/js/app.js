@@ -1109,7 +1109,7 @@ const App = {
 
     obterResumo() {
         const totais = Horas.somarCompetencia(this.state.apontamentos, this.state.competencia);
-        const folha = Folha.calcularFolha(totais);
+        const folha = Folha.calcularFolha(totais, this.state.competencia);
 
         return { totais, folha };
     },
@@ -1142,7 +1142,7 @@ const App = {
 
         this.text("#liquidoPrevisto", Folha.moeda(folha.liquido));
         this.text("#brutoPrevisto", Folha.moeda(folha.bruto));
-        this.text("#adiantamentoPrevisto", Folha.moeda(folha.adiantamentoLiquido));
+        this.text("#adiantamentoPrevisto", Folha.moeda(folha.adiantamento));
         this.text("#fgtsPrevisto", Folha.moeda(folha.fgts));
         this.text("#horasNormais", Horas.formatarHoras(totais.horasNormais));
         this.text("#faltantes", Horas.formatarHoras(totais.horasFaltantes));
@@ -1154,8 +1154,8 @@ const App = {
         this.text("#diasRegistrados", String(totais.diasRegistrados));
         this.text("#totalHorasMix", `${Horas.formatarHoras(totalHoras)} totais`);
         this.text("#jornadaHint", `Jornada ${Horas.formatarHoras(totais.jornadaRegistrada)}`);
-        this.text("#liquidoHint", `Mês ${Folha.moeda(folha.liquidoMes)} · Adiantamento ${Folha.moeda(folha.adiantamentoLiquido)}`);
-        this.text("#brutoHint", `Descontos ${Folha.moeda(folha.descontos)} · FGTS ${Folha.moeda(folha.fgts)}`);
+        this.text("#liquidoHint", `Mês ${Folha.moeda(folha.liquidoMes)} · Adiantamento ${Folha.moeda(folha.adiantamento)}`);
+        this.text("#brutoHint", `Legais ${Folha.moeda(folha.descontosLegais)} · FGTS ${Folha.moeda(folha.fgts)}`);
         this.text("#faltasHint", `${totais.diasComFalta} dia(s)`);
         this.text(
             "#dashboardSubtitle",
@@ -1276,15 +1276,15 @@ const App = {
         ];
         const descontos = [
             ["Faltas / atrasos", folha.descontoAtrasos],
-            ["Adiantamento salarial", folha.adiantamentoBruto],
+            ["Reflexo periculosidade faltas", folha.descontoPericulosidadeAtrasos],
+            ["Adiantamento salarial", folha.adiantamento],
             ["IRRF do adiantamento", folha.irrfAdiantamento],
-            ...folha.deducoesRecorrentes.itens.map(item => [item.label, item.valor]),
             ["INSS", folha.inss],
             ["IRRF", folha.irrf]
-        ];
+        ].filter(([, valor]) => valor > 0);
         const resumoFinanceiro = [
-            ["Liquido total do mes", folha.liquidoMes],
-            ["Adiantamento liquido estimado", folha.adiantamentoLiquido],
+            ["Recebimento total estimado", folha.liquidoMes],
+            ["Adiantamento estimado", folha.adiantamento],
             ["Pagamento final estimado", folha.pagamentoFinal],
             ["FGTS depositado pela empresa", folha.fgts]
         ];
@@ -1292,7 +1292,7 @@ const App = {
         this.text("#folhaLiquido", Folha.moeda(folha.pagamentoFinal));
         this.text("#folhaResumo", `${totais.diasRegistrados} registro(s) · Mês ${Folha.moeda(folha.liquidoMes)}`);
         this.text("#proventosTotal", Folha.moeda(folha.proventos));
-        this.text("#descontosTotal", Folha.moeda(folha.descontos));
+        this.text("#descontosTotal", Folha.moeda(folha.descontosLegais));
         this.text("#resumoFgts", `FGTS ${Folha.moeda(folha.fgts)}`);
         this.renderBreakdown("#resumoFinanceiro", resumoFinanceiro);
         this.renderBreakdown("#proventosList", proventos);
@@ -1328,7 +1328,7 @@ const App = {
         alvo.innerHTML = codigos.map(codigo => {
             const competencia = Competencia.competenciaPorCodigo(codigo);
             const totais = Horas.somarCompetencia(grupos[codigo], competencia);
-            const folha = Folha.calcularFolha(totais);
+            const folha = Folha.calcularFolha(totais, competencia);
 
             return `
                 <article class="history-row">

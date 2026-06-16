@@ -10,21 +10,27 @@ class FolhaService {
         this.FGTS = 0.08;
         this.DEPENDENTES_IRRF = 1;
         this.DEDUCAO_DEPENDENTE_IRRF = 189.59;
-        this.ADIANTAMENTO_BRUTO_REFERENCIA = 1926.83;
-        this.IRRF_ADIANTAMENTO_REFERENCIA = 928.76;
-        this.DEDUCOES_RECORRENTES = [
-            { chave: "contribuicaoAssistencial", label: "Contribuição Assistencial", valor: 52.50 },
-            { chave: "seguroSaude", label: "Seguro saúde médio", valor: 71.82 },
-            { chave: "emprestimo1", label: "Empréstimo Consignado 1", valor: 859.21 },
-            { chave: "emprestimo2", label: "Empréstimo Consignado 2", valor: 322.92 }
-        ];
-        this.TETO_INSS = 908.85;
-        this.INSS_FAIXAS = [
-            { limite: 1518.00, taxa: 0.075 },
-            { limite: 2793.88, taxa: 0.09 },
-            { limite: 4190.83, taxa: 0.12 },
-            { limite: 8157.41, taxa: 0.14 }
-        ];
+        this.IRRF_ADIANTAMENTO_FATOR = 0.11;
+        this.INSS_TABELAS = {
+            2025: {
+                teto: 951.62,
+                faixas: [
+                    { limite: 1518.00, taxa: 0.075 },
+                    { limite: 2793.88, taxa: 0.09 },
+                    { limite: 4190.83, taxa: 0.12 },
+                    { limite: 8157.41, taxa: 0.14 }
+                ]
+            },
+            2026: {
+                teto: 988.09,
+                faixas: [
+                    { limite: 1518.00, taxa: 0.075 },
+                    { limite: 2793.88, taxa: 0.09 },
+                    { limite: 4190.83, taxa: 0.12 },
+                    { limite: 8157.41, taxa: 0.14 }
+                ]
+            }
+        };
     }
 
     arredondar(valor, casas = 2) {
@@ -56,8 +62,13 @@ class FolhaService {
         return this.arredondar((he60 || 0) + (he70 || 0) + (he100 || 0));
     }
 
-    calcularPericulosidadeExtras(totalExtras) {
-        return this.calcularPericulosidade(totalExtras);
+    obterTabelaINSS(competencia = null) {
+        const ano = competencia?.fim?.getFullYear?.() || new Date().getFullYear();
+        return this.INSS_TABELAS[ano] || this.INSS_TABELAS[2026];
+    }
+
+    calcularPericulosidadeExtras(totalExtras, rsr = 0) {
+        return this.calcularPericulosidade((totalExtras || 0) + (rsr || 0));
     }
 
     calcularRSR(totalExtras, totaisHoras = {}) {
@@ -79,15 +90,16 @@ class FolhaService {
         return this.arredondar((horasFaltantes || 0) * this.VALOR_HORA);
     }
 
-    calcularINSS(bruto) {
+    calcularINSS(bruto, competencia = null) {
         if (!bruto || bruto <= 0) {
             return 0;
         }
 
+        const tabela = this.obterTabelaINSS(competencia);
         let total = 0;
         let anterior = 0;
 
-        for (const faixa of this.INSS_FAIXAS) {
+        for (const faixa of tabela.faixas) {
             if (bruto > faixa.limite) {
                 total += (faixa.limite - anterior) * faixa.taxa;
                 anterior = faixa.limite;
@@ -97,7 +109,7 @@ class FolhaService {
             }
         }
 
-        return this.arredondar(Math.min(total, this.TETO_INSS));
+        return this.arredondar(Math.min(total, tabela.teto));
     }
 
     calcularIRRF(base) {
@@ -128,46 +140,69 @@ class FolhaService {
         return this.arredondar((base || 0) * this.FGTS);
     }
 
-    calcularAdiantamentoBruto(bruto) {
-        if (!bruto || bruto <= 0) {
+    calcularTaxaAdiantamento(horasNormais, competencia = null) {
+        const codigo = competencia?.codigo || "";
+        const ano = competencia?.fim?.getFullYear?.() || new Date().getFullYear();
+
+        if (codigo === "2025-10") {
+            return 0.375;
+        }
+
+        if (ano <= 2025) {
+            return 0.29;
+        }
+
+        const taxa = 0.102 + (horasNormais || 0) * 0.000605;
+        return Math.min(0.24, Math.max(0.22, taxa));
+    }
+
+    calcularAdiantamento(salarioNormal, horasNormais, competencia = null) {
+        if (!salarioNormal || salarioNormal <= 0) {
             return 0;
         }
 
-        return this.arredondar(Math.min(this.ADIANTAMENTO_BRUTO_REFERENCIA, bruto * 0.40));
+        const taxa = this.calcularTaxaAdiantamento(horasNormais, competencia);
+        return this.arredondar(salarioNormal * taxa);
     }
 
-    calcularIRRFAdiantamento(irrfTotal, adiantamentoBruto) {
-        if (!irrfTotal || !adiantamentoBruto) {
+    calcularIRRFAdiantamento(salarioNormal, competencia = null) {
+        if (!salarioNormal || salarioNormal <= 0) {
             return 0;
         }
 
-        return this.arredondar(Math.min(irrfTotal, this.IRRF_ADIANTAMENTO_REFERENCIA));
-    }
-
-    calcularDeducoesRecorrentes(bruto) {
-        if (!bruto || bruto <= 0) {
-            return {
-                total: 0,
-                itens: this.DEDUCOES_RECORRENTES.map(item => ({ ...item, valor: 0 }))
-            };
+        if (competencia?.codigo === "2025-10") {
+            return 0;
         }
 
-        const itens = this.DEDUCOES_RECORRENTES.map(item => ({ ...item }));
-        const total = this.arredondar(itens.reduce((acc, item) => acc + item.valor, 0));
-
-        return { total, itens };
+        return this.arredondar(salarioNormal * this.IRRF_ADIANTAMENTO_FATOR);
     }
 
-    calcularFolha(totaisHoras = {}) {
+    calcularDescontoPericulosidadeAtrasos(descontoAtrasos, competencia = null) {
+        if (!descontoAtrasos || descontoAtrasos <= 0) {
+            return 0;
+        }
+
+        if ((competencia?.codigo || "") < "2026-03") {
+            return 0;
+        }
+
+        return this.calcularPericulosidade(descontoAtrasos);
+    }
+
+    calcularFolha(totaisHoras = {}, competencia = null) {
         const salarioNormal = this.calcularSalarioNormal(totaisHoras.horasNormais);
         const periculosidade = this.calcularPericulosidade(salarioNormal);
         const he60 = this.calcularHE60(totaisHoras.he60);
         const he70 = this.calcularHE70(totaisHoras.he70);
         const he100 = this.calcularHE100(totaisHoras.he100);
         const totalExtras = this.calcularTotalExtras(he60, he70, he100);
-        const periculosidadeExtras = this.calcularPericulosidadeExtras(totalExtras);
         const rsr = this.calcularRSR(totalExtras, totaisHoras);
+        const periculosidadeExtras = this.calcularPericulosidadeExtras(totalExtras, rsr);
         const descontoAtrasos = this.calcularDescontoAtrasos(totaisHoras.horasFaltantes);
+        const descontoPericulosidadeAtrasos = this.calcularDescontoPericulosidadeAtrasos(
+            descontoAtrasos,
+            competencia
+        );
 
         const proventos = this.arredondar(
             salarioNormal +
@@ -177,26 +212,30 @@ class FolhaService {
             rsr
         );
 
-        const bruto = this.arredondar(proventos - descontoAtrasos);
-        const fgts = this.calcularFGTS(bruto);
-        const inss = this.calcularINSS(bruto);
-        const baseIR = this.arredondar(bruto - inss);
+        const baseTrabalhista = this.arredondar(
+            proventos - descontoAtrasos - descontoPericulosidadeAtrasos
+        );
+        const fgts = this.calcularFGTS(baseTrabalhista);
+        const inss = this.calcularINSS(baseTrabalhista, competencia);
+        const baseIR = this.arredondar(baseTrabalhista - inss);
         const irrfTotal = this.calcularIRRF(baseIR);
-        const adiantamentoBruto = this.calcularAdiantamentoBruto(bruto);
-        const irrfAdiantamento = this.calcularIRRFAdiantamento(irrfTotal, adiantamentoBruto);
-        const adiantamentoLiquido = this.arredondar(Math.max(0, adiantamentoBruto - irrfAdiantamento));
+        const adiantamento = this.calcularAdiantamento(
+            salarioNormal,
+            totaisHoras.horasNormais,
+            competencia
+        );
+        const irrfAdiantamento = this.calcularIRRFAdiantamento(salarioNormal, competencia);
         const irrf = this.arredondar(Math.max(0, irrfTotal - irrfAdiantamento));
-        const deducoesRecorrentes = this.calcularDeducoesRecorrentes(bruto);
-        const descontos = this.arredondar(
+        const descontosLegais = this.arredondar(
             descontoAtrasos +
+            descontoPericulosidadeAtrasos +
             inss +
             irrf +
             irrfAdiantamento +
-            adiantamentoBruto +
-            deducoesRecorrentes.total
+            adiantamento
         );
-        const pagamentoFinal = this.arredondar(Math.max(0, proventos - descontos));
-        const liquidoMes = this.arredondar(pagamentoFinal + adiantamentoLiquido);
+        const pagamentoFinal = this.arredondar(Math.max(0, proventos - descontosLegais));
+        const liquidoMes = this.arredondar(pagamentoFinal + adiantamento);
 
         return {
             salarioNormal,
@@ -208,18 +247,19 @@ class FolhaService {
             periculosidadeExtras,
             rsr,
             descontoAtrasos,
+            descontoPericulosidadeAtrasos,
             proventos,
-            bruto,
+            bruto: baseTrabalhista,
+            baseTrabalhista,
             fgts,
             inss,
             baseIR,
             irrfTotal,
             irrf,
             irrfAdiantamento,
-            adiantamentoBruto,
-            adiantamentoLiquido,
-            deducoesRecorrentes,
-            descontos,
+            adiantamento,
+            descontosLegais,
+            descontos: descontosLegais,
             pagamentoFinal,
             liquidoMes,
             liquido: pagamentoFinal
