@@ -1581,7 +1581,7 @@ const App = {
         }
 
         const proventos = [
-            ["Horas normais", folha.salarioNormal],
+            [`Horas normais (${folha.horasBaseMensal}h base)`, folha.salarioNormal],
             ["Periculosidade sobre normais", folha.periculosidade],
             ["HE 60%", folha.he60],
             ["HE 70%", folha.he70],

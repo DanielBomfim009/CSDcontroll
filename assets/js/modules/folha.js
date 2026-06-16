@@ -6,6 +6,7 @@
 class FolhaService {
     constructor() {
         this.VALOR_HORA = 36.35;
+        this.HORAS_BASE_MENSAL = 220;
         this.PERICULOSIDADE = 0.30;
         this.FGTS = 0.08;
         this.DEPENDENTES_IRRF = 1;
@@ -38,8 +39,8 @@ class FolhaService {
         return Math.round((Number(valor) + Number.EPSILON) * fator) / fator;
     }
 
-    calcularSalarioNormal(horasNormais) {
-        return this.arredondar((horasNormais || 0) * this.VALOR_HORA);
+    calcularSalarioNormal(horasBase = this.HORAS_BASE_MENSAL) {
+        return this.arredondar((horasBase || 0) * this.VALOR_HORA);
     }
 
     calcularPericulosidade(base) {
@@ -190,7 +191,8 @@ class FolhaService {
     }
 
     calcularFolha(totaisHoras = {}, competencia = null) {
-        const salarioNormal = this.calcularSalarioNormal(totaisHoras.horasNormais);
+        const horasBaseMensal = this.HORAS_BASE_MENSAL;
+        const salarioNormal = this.calcularSalarioNormal(horasBaseMensal);
         const periculosidade = this.calcularPericulosidade(salarioNormal);
         const he60 = this.calcularHE60(totaisHoras.he60);
         const he70 = this.calcularHE70(totaisHoras.he70);
@@ -221,7 +223,7 @@ class FolhaService {
         const irrfTotal = this.calcularIRRF(baseIR);
         const adiantamento = this.calcularAdiantamento(
             salarioNormal,
-            totaisHoras.horasNormais,
+            horasBaseMensal,
             competencia
         );
         const irrfAdiantamento = this.calcularIRRFAdiantamento(salarioNormal, competencia);
@@ -239,6 +241,7 @@ class FolhaService {
 
         return {
             salarioNormal,
+            horasBaseMensal,
             periculosidade,
             he60,
             he70,
