@@ -1377,6 +1377,10 @@ const App = {
         return this.state.holerites.find(item => item.competencia === this.state.competencia?.codigo) || null;
     },
 
+    temDadosAtuais() {
+        return this.state.apontamentos.length > 0 || Boolean(this.obterHoleriteAtual());
+    },
+
     render() {
         this.dom.competenciaAtual.textContent = Competencia.formatarCompetencia(this.state.competencia);
         this.renderCompetenciaSelect();
@@ -1403,8 +1407,39 @@ const App = {
     renderDashboard() {
         const { totais, folha } = this.obterResumo();
         const holerite = this.obterHoleriteAtual();
+        const temDados = this.temDadosAtuais();
         const totalHoras = totais.horasTrabalhadas || 0;
         const totalExtras = Horas.totalExtras(totais);
+
+        if (!temDados) {
+            this.text("#liquidoPrevisto", Folha.moeda(0));
+            this.text("#brutoPrevisto", Folha.moeda(0));
+            this.text("#adiantamentoPrevisto", Folha.moeda(0));
+            this.text("#fgtsPrevisto", Folha.moeda(0));
+            this.text("#horasNormais", Horas.formatarHoras(0));
+            this.text("#faltantes", Horas.formatarHoras(0));
+            this.text("#he60", Horas.formatarHoras(0));
+            this.text("#he70", Horas.formatarHoras(0));
+            this.text("#he100", Horas.formatarHoras(0));
+            this.text("#periculosidadeTotal", Folha.moeda(0));
+            this.text("#rsrTotal", Folha.moeda(0));
+            this.text("#diasRegistrados", "0");
+            this.text("#totalHorasMix", `${Horas.formatarHoras(0)} totais`);
+            this.text("#jornadaHint", `Jornada ${Horas.formatarHoras(0)}`);
+            this.text("#liquidoHint", "Sem dados importados");
+            this.text("#brutoHint", "Lance pontos ou importe um contracheque");
+            this.text("#faltasHint", "0 dia(s)");
+            this.text("#dashboardSubtitle", "Sem apontamentos");
+            this.renderMixBars({
+                horasNormais: 0,
+                he60: 0,
+                he70: 0,
+                he100: 0,
+                horasFaltantes: 0
+            });
+            this.renderRecentes();
+            return;
+        }
 
         this.text("#liquidoPrevisto", Folha.moeda(folha.liquido));
         this.text("#brutoPrevisto", Folha.moeda(folha.bruto));
@@ -1542,6 +1577,19 @@ const App = {
     renderFolha() {
         const { totais, folha } = this.obterResumo();
         const holerite = this.obterHoleriteAtual();
+        const temDados = this.temDadosAtuais();
+
+        if (!temDados) {
+            this.text("#folhaLiquido", Folha.moeda(0));
+            this.text("#folhaResumo", "Sem dados para calcular");
+            this.text("#proventosTotal", Folha.moeda(0));
+            this.text("#descontosTotal", Folha.moeda(0));
+            this.text("#resumoFgts", `FGTS ${Folha.moeda(0)}`);
+            this.renderBreakdown("#resumoFinanceiro", []);
+            this.renderBreakdown("#proventosList", []);
+            this.renderBreakdown("#descontosList", []);
+            return;
+        }
 
         if (holerite) {
             const totalRecebidoMes = holerite.totalRecebidoMes || holerite.liquidoReceber;
@@ -1615,6 +1663,11 @@ const App = {
     },
 
     renderBreakdown(seletor, itens) {
+        if (!itens.length) {
+            this.$(seletor).innerHTML = '<div class="empty-state">Sem dados</div>';
+            return;
+        }
+
         this.$(seletor).innerHTML = itens.map(([label, valor]) => `
             <div class="breakdown-row">
                 <div>
