@@ -2108,3 +2108,223 @@ body.auth-active .auth-screen {
         padding: 20px;
     }
 }
+
+/* CSDControl: identidade azul unificada */
+html {
+    background: #071a4d;
+}
+
+body:not(.auth-active) {
+    position: relative;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(78, 138, 255, 0.32), transparent 260px),
+        linear-gradient(135deg, #071a4d 0%, #123f95 46%, #1b74d8 100%);
+}
+
+body:not(.auth-active)::before,
+body:not(.auth-active)::after {
+    content: "";
+    position: fixed;
+    z-index: 0;
+    width: 58vw;
+    max-width: 560px;
+    aspect-ratio: 1;
+    border-radius: 38px;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+    animation: authFloat 10s ease-in-out infinite;
+}
+
+body:not(.auth-active)::before {
+    top: -180px;
+    right: -150px;
+}
+
+body:not(.auth-active)::after {
+    bottom: -230px;
+    left: -180px;
+    animation-delay: -4s;
+}
+
+body:not(.auth-active) .app-shell {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+body:not(.auth-active) .sidebar,
+body:not(.auth-active) .topbar,
+body:not(.auth-active) .side-nav,
+body:not(.auth-active) .metric-card,
+body:not(.auth-active) .surface-panel,
+body:not(.auth-active) .entry-form,
+body:not(.auth-active) .setting-row,
+body:not(.auth-active) .history-row,
+body:not(.auth-active) .modal-card {
+    border-color: rgba(191, 219, 254, 0.54);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(246, 250, 255, 0.9)),
+        #ffffff;
+    box-shadow: 0 18px 50px rgba(5, 20, 54, 0.16);
+    backdrop-filter: blur(22px);
+}
+
+body:not(.auth-active) .workspace,
+body:not(.auth-active) .content {
+    background: transparent;
+}
+
+body:not(.auth-active) .topbar {
+    border-bottom-color: rgba(191, 219, 254, 0.35);
+}
+
+body:not(.auth-active) .sidebar {
+    border-right-color: rgba(191, 219, 254, 0.35);
+}
+
+.brand-mark,
+.auth-logo {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.brand-mark img,
+.auth-logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 12px 18px rgba(15, 46, 114, 0.2));
+}
+
+body:not(.auth-active) .brand {
+    color: #071329;
+}
+
+body:not(.auth-active) .brand small {
+    color: #64748b;
+}
+
+body:not(.auth-active) .eyebrow,
+body:not(.auth-active) .sidebar-meta span {
+    color: #0891b2;
+}
+
+body:not(.auth-active) .nav-icon {
+    background: rgba(239, 246, 255, 0.9);
+    color: #64748b;
+}
+
+body:not(.auth-active) .nav-item.is-active,
+body[data-view="dashboard"]:not(.auth-active) .side-nav .nav-item[data-view="dashboard"],
+body[data-view="apontamentos"]:not(.auth-active) .side-nav .nav-item[data-view="apontamentos"],
+body[data-view="folha"]:not(.auth-active) .side-nav .nav-item[data-view="folha"],
+body[data-view="historico"]:not(.auth-active) .side-nav .nav-item[data-view="historico"],
+body[data-view="configuracoes"]:not(.auth-active) .side-nav .nav-item[data-view="configuracoes"] {
+    border-color: rgba(37, 99, 235, 0.18);
+    background: rgba(239, 246, 255, 0.92);
+    color: #1d4ed8;
+}
+
+body:not(.auth-active) .nav-item.is-active .nav-icon,
+body[data-view="dashboard"]:not(.auth-active) .side-nav .nav-item[data-view="dashboard"] .nav-icon,
+body[data-view="apontamentos"]:not(.auth-active) .side-nav .nav-item[data-view="apontamentos"] .nav-icon,
+body[data-view="folha"]:not(.auth-active) .side-nav .nav-item[data-view="folha"] .nav-icon,
+body[data-view="historico"]:not(.auth-active) .side-nav .nav-item[data-view="historico"] .nav-icon,
+body[data-view="configuracoes"]:not(.auth-active) .side-nav .nav-item[data-view="configuracoes"] .nav-icon {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+
+body:not(.auth-active) .primary-action,
+body:not(.auth-active) .auth-submit {
+    border-color: rgba(37, 99, 235, 0.2);
+    background: linear-gradient(135deg, #0f2e72, #2563eb);
+    box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+}
+
+body:not(.auth-active) .ghost-action,
+body:not(.auth-active) .row-action,
+body:not(.auth-active) .icon-button {
+    background: rgba(255, 255, 255, 0.86);
+}
+
+body:not(.auth-active) .metric-income {
+    border-color: rgba(191, 219, 254, 0.72);
+    background:
+        linear-gradient(135deg, rgba(219, 234, 254, 0.92), rgba(255, 255, 255, 0.88)),
+        #ffffff;
+}
+
+body:not(.auth-active) .metric-card::after,
+body:not(.auth-active) .surface-panel::after,
+body:not(.auth-active) .entry-form::after {
+    content: "";
+    position: absolute;
+    inset: -72px -92px auto auto;
+    width: 180px;
+    height: 180px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.13), rgba(56, 189, 248, 0.09));
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+
+body:not(.auth-active) .metric-card,
+body:not(.auth-active) .surface-panel,
+body:not(.auth-active) .entry-form {
+    position: relative;
+    overflow: hidden;
+}
+
+body:not(.auth-active) .metric-card > *,
+body:not(.auth-active) .surface-panel > *,
+body:not(.auth-active) .entry-form > * {
+    position: relative;
+    z-index: 1;
+}
+
+body:not(.auth-active) .form-preview,
+body:not(.auth-active) .file-drop {
+    border-color: rgba(147, 197, 253, 0.72);
+    background: rgba(239, 246, 255, 0.78);
+}
+
+body:not(.auth-active) input:focus {
+    border-color: rgba(37, 99, 235, 0.72);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+@media (max-width: 860px) {
+    body:not(.auth-active) .sidebar {
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: none;
+    }
+
+    body:not(.auth-active) .topbar {
+        background: rgba(255, 255, 255, 0.94);
+    }
+
+    body:not(.auth-active) .side-nav {
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(18px);
+    }
+
+    body:not(.auth-active) .content {
+        background: transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body:not(.auth-active)::before,
+    body:not(.auth-active)::after,
+    .auth-screen::before,
+    .auth-screen::after,
+    .auth-motion span {
+        animation: none;
+    }
+}

@@ -1,5 +1,5 @@
 /**
- * SalárioPro PWA
+ * CSDControl PWA
  * IndexedDB Manager
  */
 
@@ -31,7 +31,7 @@ class IndexedDBManager {
             request.onerror = () => reject(request.error);
 
             request.onblocked = () => {
-                reject(new Error("Feche outras abas do SalárioPro para atualizar o banco local."));
+                reject(new Error("Feche outras abas do CSDControl para atualizar o banco local."));
             };
 
             request.onsuccess = () => {

@@ -1,16 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SalárioPro">
-    <rect width="256" height="256" rx="52" fill="#ffffff"/>
-    <rect x="28" y="28" width="200" height="200" rx="38" fill="#f6f4ff" stroke="#e4ddff" stroke-width="6"/>
-    <rect x="54" y="56" width="58" height="58" rx="16" fill="url(#brand)"/>
-    <path d="M71 88c6 4 18 4 18-2 0-10-27-3-27-22 0-13 15-19 31-13v13c-7-4-17-4-17 2 0 9 27 3 27 21 0 14-16 20-32 14V88Z" fill="#ffffff"/>
-    <path d="M128 72h58v12h-58V72Zm0 34h82v14h-82v-14Zm0 38h64v14h-64v-14Zm0 38h44v14h-44v-14Z" fill="#071329"/>
-    <path d="M62 156h44v12H62v-12Zm0 26h44v12H62v-12Z" fill="#6f4bd8"/>
-    <circle cx="186" cy="184" r="28" fill="#101828"/>
-    <path d="m173 184 9 9 18-22" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="CSDControl">
     <defs>
-        <linearGradient id="brand" x1="54" y1="56" x2="112" y2="114" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#6f4bd8"/>
-            <stop offset="1" stop-color="#286ef0"/>
+        <linearGradient id="csd-icon-page" x1="18" y1="12" x2="238" y2="244" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#f8fbff"/>
+            <stop offset="1" stop-color="#dbeafe"/>
         </linearGradient>
+        <linearGradient id="csd-icon-bg" x1="52" y1="42" x2="204" y2="214" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#38bdf8"/>
+            <stop offset="0.52" stop-color="#2563eb"/>
+            <stop offset="1" stop-color="#0f2e72"/>
+        </linearGradient>
+        <linearGradient id="csd-icon-line" x1="82" y1="76" x2="176" y2="178" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#ffffff"/>
+            <stop offset="1" stop-color="#bfdbfe"/>
+        </linearGradient>
+        <filter id="csd-icon-shadow" x="-20%" y="-20%" width="140%" height="145%">
+            <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#0f2e72" flood-opacity="0.22"/>
+        </filter>
     </defs>
+    <rect width="256" height="256" rx="56" fill="url(#csd-icon-page)"/>
+    <path d="M128 32 204 66c14 6 22 19 22 34v56c0 15-8 28-22 34l-76 34-76-34c-14-6-22-19-22-34v-56c0-15 8-28 22-34l76-34Z" fill="url(#csd-icon-bg)" filter="url(#csd-icon-shadow)"/>
+    <path d="M173 83a67 67 0 1 0 6 79" fill="none" stroke="url(#csd-icon-line)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M96 132 120 156l44-58" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M72 80h32M72 176h32M174 80h6M174 176h6" fill="none" stroke="#93c5fd" stroke-width="10" stroke-linecap="round" opacity="0.78"/>
 </svg>

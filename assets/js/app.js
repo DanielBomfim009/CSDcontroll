@@ -889,7 +889,7 @@ const App = {
             panel.classList.toggle("is-active", panel.dataset.panel === view);
         });
 
-        this.dom.pageTitle.textContent = titles[view] || "SalárioPro";
+        this.dom.pageTitle.textContent = titles[view] || "CSDControl";
     },
 
     obterResumo() {

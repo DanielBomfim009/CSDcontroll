@@ -1,4 +1,4 @@
-const CACHE_NAME = "salariopro-v10";
+const CACHE_NAME = "salariopro-v11";
 
 const APP_SHELL = [
     "./",
@@ -10,6 +10,8 @@ const APP_SHELL = [
     "./assets/js/modules/horas.js",
     "./assets/js/modules/folha.js",
     "./assets/js/app.js",
+    "./assets/img/logo-mark.svg",
+    "./assets/img/logo-full.svg",
     "./assets/img/icon.svg"
 ];
 

@@ -1,12 +1,12 @@
 {
-    "name": "SalárioPro",
-    "short_name": "SalárioPro",
-    "description": "Controle financeiro de horas trabalhadas com projeção salarial em tempo real.",
+    "name": "CSDControl",
+    "short_name": "CSDControl",
+    "description": "Controle financeiro de horas trabalhadas com projecao salarial em tempo real.",
     "start_url": "./index.html",
     "scope": "./",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#ffffff",
+    "background_color": "#123f95",
+    "theme_color": "#123f95",
     "icons": [
         {
             "src": "./assets/img/icon.svg",

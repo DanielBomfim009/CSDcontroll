@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="CSDControl">
+    <defs>
+        <linearGradient id="csd-mark-bg" x1="16" y1="14" x2="112" y2="118" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#38bdf8"/>
+            <stop offset="0.5" stop-color="#2563eb"/>
+            <stop offset="1" stop-color="#0f2e72"/>
+        </linearGradient>
+        <linearGradient id="csd-mark-line" x1="38" y1="32" x2="92" y2="96" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#ffffff"/>
+            <stop offset="1" stop-color="#bfdbfe"/>
+        </linearGradient>
+        <filter id="csd-mark-shadow" x="-20%" y="-20%" width="140%" height="145%">
+            <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#0f2e72" flood-opacity="0.28"/>
+        </filter>
+    </defs>
+    <path filter="url(#csd-mark-shadow)" d="M64 10 105 28c8 4 13 11 13 20v32c0 9-5 17-13 20L64 118 23 100c-8-3-13-11-13-20V48c0-9 5-16 13-20L64 10Z" fill="url(#csd-mark-bg)"/>
+    <path d="M88 41a36 36 0 1 0 3 42" fill="none" stroke="url(#csd-mark-line)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M48 66 61 79l24-31" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M34 36h18M34 92h18M92 36h2M92 92h2" fill="none" stroke="#93c5fd" stroke-width="6" stroke-linecap="round" opacity="0.75"/>
+</svg>

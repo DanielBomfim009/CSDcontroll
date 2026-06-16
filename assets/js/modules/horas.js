@@ -1,5 +1,5 @@
 /**
- * SalárioPro PWA
+ * CSDControl PWA
  * Módulo de horas
  */
 
