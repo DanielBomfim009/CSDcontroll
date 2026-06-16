@@ -1373,6 +1373,10 @@ const App = {
         return { totais, folha };
     },
 
+    obterHoleriteAtual() {
+        return this.state.holerites.find(item => item.competencia === this.state.competencia?.codigo) || null;
+    },
+
     render() {
         this.dom.competenciaAtual.textContent = Competencia.formatarCompetencia(this.state.competencia);
         this.renderCompetenciaSelect();
@@ -1398,6 +1402,7 @@ const App = {
 
     renderDashboard() {
         const { totais, folha } = this.obterResumo();
+        const holerite = this.obterHoleriteAtual();
         const totalHoras = totais.horasTrabalhadas || 0;
         const totalExtras = Horas.totalExtras(totais);
 
@@ -1424,6 +1429,16 @@ const App = {
                 ? `${totais.diasRegistrados} dia(s) · ${Horas.formatarHoras(totalExtras)} HE`
                 : "Sem apontamentos"
         );
+
+        if (holerite) {
+            this.text("#liquidoPrevisto", Folha.moeda(holerite.liquidoReceber));
+            this.text("#brutoPrevisto", Folha.moeda(holerite.proventos));
+            this.text("#adiantamentoPrevisto", Folha.moeda(holerite.adiantamento));
+            this.text("#fgtsPrevisto", Folha.moeda(holerite.fgts));
+            this.text("#liquidoHint", `Recebido no mes ${Folha.moeda(holerite.totalRecebidoMes || holerite.liquidoReceber)} · Adiantamento ${Folha.moeda(holerite.adiantamento)}`);
+            this.text("#brutoHint", `Descontos ${Folha.moeda(holerite.descontos)} · FGTS ${Folha.moeda(holerite.fgts)}`);
+            this.text("#dashboardSubtitle", `Contracheque importado · Fechamento ${Folha.moeda(holerite.liquidoReceber)}`);
+        }
 
         this.renderMixBars(totais);
         this.renderRecentes();
@@ -1526,6 +1541,45 @@ const App = {
 
     renderFolha() {
         const { totais, folha } = this.obterResumo();
+        const holerite = this.obterHoleriteAtual();
+
+        if (holerite) {
+            const totalRecebidoMes = holerite.totalRecebidoMes || holerite.liquidoReceber;
+            const descontosConhecidos = [
+                holerite.adiantamento,
+                holerite.inss,
+                holerite.irrf,
+                holerite.irrfAdiantamento
+            ].reduce((acc, valor) => acc + (valor || 0), 0);
+            const outrosDescontos = Folha.arredondar(Math.max(0, holerite.descontos - descontosConhecidos));
+            const proventosImportados = [
+                ["Total importado", holerite.proventos]
+            ];
+            const descontosImportados = [
+                ["Adiantamento salarial", holerite.adiantamento],
+                ["INSS", holerite.inss],
+                ["IRRF fechamento", holerite.irrf],
+                ["IRRF quinzena", holerite.irrfAdiantamento],
+                ["Outros descontos", outrosDescontos]
+            ].filter(([, valor]) => valor > 0);
+            const resumoImportado = [
+                ["Recebido total do mes", totalRecebidoMes],
+                ["Adiantamento recebido", holerite.adiantamento],
+                ["Pagamento do dia 01", holerite.liquidoReceber],
+                ["FGTS do mes", holerite.fgts]
+            ];
+
+            this.text("#folhaLiquido", Folha.moeda(holerite.liquidoReceber));
+            this.text("#folhaResumo", `Contracheque importado · Mes ${Folha.moeda(totalRecebidoMes)}`);
+            this.text("#proventosTotal", Folha.moeda(holerite.proventos));
+            this.text("#descontosTotal", Folha.moeda(holerite.descontos));
+            this.text("#resumoFgts", `FGTS ${Folha.moeda(holerite.fgts)}`);
+            this.renderBreakdown("#resumoFinanceiro", resumoImportado);
+            this.renderBreakdown("#proventosList", proventosImportados);
+            this.renderBreakdown("#descontosList", descontosImportados);
+            return;
+        }
+
         const proventos = [
             ["Horas normais", folha.salarioNormal],
             ["Periculosidade sobre normais", folha.periculosidade],
