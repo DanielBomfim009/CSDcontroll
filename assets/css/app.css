@@ -55,7 +55,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
     font: inherit;
     min-width: 0;
 }
@@ -67,6 +69,8 @@ button {
 button,
 a,
 input,
+select,
+textarea,
 label {
     -webkit-tap-highlight-color: transparent;
 }
@@ -278,6 +282,37 @@ h3 {
     color: var(--muted);
     font-size: 13px;
     line-height: 1.5;
+}
+
+.period-control {
+    display: grid;
+    grid-template-columns: auto minmax(0, 300px);
+    gap: 10px;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.period-control span {
+    color: var(--accent-strong);
+    text-transform: uppercase;
+}
+
+.period-control select {
+    min-width: 0;
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #ffffff;
+    color: var(--text);
+    padding: 0 36px 0 12px;
+    font-size: 16px;
+    font-weight: 800;
+    outline: none;
 }
 
 .topbar-actions {
@@ -639,6 +674,7 @@ input {
     background: #ffffff;
     color: var(--text);
     padding: 0 12px;
+    font-size: 16px;
     outline: none;
     box-shadow: inset 0 1px 0 rgba(31, 44, 71, 0.02);
 }
@@ -1610,6 +1646,18 @@ input:focus {
     .topbar {
         padding: 14px 16px 12px;
         box-shadow: none;
+    }
+
+    .period-control {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .period-control select {
+        width: 100%;
+        min-height: 44px;
     }
 
     .content {

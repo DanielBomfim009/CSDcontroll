@@ -39,6 +39,7 @@ const App = {
         try {
             await DB.init();
             await this.carregarApontamentos();
+            this.aplicarCompetenciaSalva();
             this.render();
         } catch (error) {
             console.error(error);
@@ -54,6 +55,7 @@ const App = {
         this.dom = {
             pageTitle: this.$("#pageTitle"),
             competenciaAtual: this.$("#competenciaAtual"),
+            competenciaSelect: this.$("#competenciaSelect"),
             navItems: this.$$(".nav-item"),
             views: this.$$(".view"),
             form: this.$("#apontamentoForm"),
@@ -234,6 +236,7 @@ const App = {
         this.dom.cancelImportBtn.addEventListener("click", () => this.closeImportModal());
         this.dom.confirmImportBtn.addEventListener("click", () => this.importarRegistros());
         this.dom.importFile.addEventListener("change", event => this.handleImportFile(event));
+        this.dom.competenciaSelect.addEventListener("change", event => this.setCompetencia(event.target.value));
         this.dom.importModal.addEventListener("click", event => {
             if (event.target === this.dom.importModal) {
                 this.closeImportModal();
@@ -276,8 +279,52 @@ const App = {
             .map(registro => this.normalizarRegistro(registro))
             .sort((a, b) => b.data.localeCompare(a.data));
 
+        this.filtrarApontamentos();
+    },
+
+    filtrarApontamentos() {
         this.state.apontamentos = this.state.todosApontamentos
             .filter(apontamento => Competencia.pertenceCompetencia(apontamento.data, this.state.competencia));
+    },
+
+    aplicarCompetenciaSalva() {
+        const codigo = localStorage.getItem("csdcontrol.competencia");
+
+        if (codigo) {
+            try {
+                this.state.competencia = Competencia.competenciaPorCodigo(codigo);
+                this.filtrarApontamentos();
+            } catch (error) {
+                localStorage.removeItem("csdcontrol.competencia");
+            }
+        }
+    },
+
+    setCompetencia(codigo) {
+        if (!codigo) {
+            return;
+        }
+
+        this.state.competencia = Competencia.competenciaPorCodigo(codigo);
+        localStorage.setItem("csdcontrol.competencia", codigo);
+        this.state.pendingDeleteId = null;
+        this.filtrarApontamentos();
+        this.render();
+    },
+
+    getCompetenciasDisponiveis() {
+        const codigos = new Set([
+            Competencia.getCompetencia().codigo,
+            this.state.competencia?.codigo
+        ].filter(Boolean));
+
+        this.state.todosApontamentos.forEach(apontamento => {
+            codigos.add(apontamento.competencia || Competencia.getCompetencia(apontamento.data).codigo);
+        });
+
+        return Array.from(codigos)
+            .sort((a, b) => b.localeCompare(a))
+            .map(codigo => Competencia.competenciaPorCodigo(codigo));
     },
 
     normalizarRegistro(registro) {
@@ -402,7 +449,7 @@ const App = {
             for (let pagina = 1; pagina <= pdf.numPages; pagina += 1) {
                 const page = await pdf.getPage(pagina);
                 const content = await page.getTextContent();
-                paginas.push(content.items.map(item => item.str).join(" "));
+                paginas.push(this.pdfTextContentToLines(content));
             }
 
             return paginas.join("\n");
@@ -439,6 +486,36 @@ const App = {
         });
     },
 
+    pdfTextContentToLines(content) {
+        const linhas = new Map();
+
+        content.items.forEach(item => {
+            const texto = String(item.str || "").trim();
+
+            if (!texto) {
+                return;
+            }
+
+            const x = item.transform?.[4] || 0;
+            const y = Math.round((item.transform?.[5] || 0) * 2) / 2;
+            const chave = String(y);
+            const linha = linhas.get(chave) || [];
+            linha.push({ x, texto });
+            linhas.set(chave, linha);
+        });
+
+        return Array.from(linhas.entries())
+            .sort((a, b) => Number(b[0]) - Number(a[0]))
+            .map(([, itens]) => itens
+                .sort((a, b) => a.x - b.x)
+                .map(item => item.texto)
+                .join(" ")
+                .replace(/\s+/g, " ")
+                .trim())
+            .filter(Boolean)
+            .join("\n");
+    },
+
     async extractPdfTextFallback(file) {
         const buffer = await file.arrayBuffer();
         const raw = new TextDecoder("latin1").decode(buffer);
@@ -473,6 +550,12 @@ const App = {
     },
 
     parseImportText(texto) {
+        const registrosFolha = this.parseCompanyTimesheetText(texto);
+
+        if (registrosFolha.length) {
+            return registrosFolha;
+        }
+
         const linhas = this.parseCsv(texto)
             .map(linha => linha.map(celula => celula.trim()))
             .filter(linha => linha.some(Boolean));
@@ -499,6 +582,116 @@ const App = {
         }
 
         return this.parsePlainTimesheetText(texto);
+    },
+
+    parseCompanyTimesheetText(texto) {
+        const periodo = this.extractImportPeriod(texto);
+        const linhas = String(texto || "")
+            .replace(/\r/g, "\n")
+            .replace(/\s+(seg|ter|qua|qui|sex|s[áa]b|dom)\s+(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/gi, "\n$1 $2")
+            .split("\n")
+            .map(linha => linha.replace(/\s+/g, " ").trim())
+            .filter(Boolean);
+        const registros = [];
+        const linhaPontoRegex = /^(seg|ter|qua|qui|sex|s[áa]b|dom)\s+(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s+(.+)$/i;
+
+        linhas.forEach(linha => {
+            const match = linha.match(linhaPontoRegex);
+
+            if (!match) {
+                return;
+            }
+
+            const [, diaSemanaTexto, dia, mes, anoLinha, restante] = match;
+            const tokens = restante.split(/\s+/);
+            const pontos = tokens.slice(0, 4);
+
+            if (pontos.length < 4 || pontos.some(token => token === "-")) {
+                return;
+            }
+
+            const entrada = this.normalizarHorario(pontos[0]);
+            const saidaAlmoco = this.normalizarHorario(pontos[1]);
+            const retornoAlmoco = this.normalizarHorario(pontos[2]);
+            const saida = this.normalizarHorario(pontos[3]);
+
+            if (!entrada || !saidaAlmoco || !retornoAlmoco || !saida) {
+                return;
+            }
+
+            const data = this.normalizarDataComPeriodo(dia, mes, anoLinha, periodo);
+
+            if (!data) {
+                return;
+            }
+
+            const diaSemana = diaSemanaTexto
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase();
+            const feriado = diaSemana === "dom" || /\bferiado\b/i.test(linha);
+
+            registros.push({
+                data,
+                entrada,
+                saidaAlmoco,
+                retornoAlmoco,
+                saida,
+                feriado,
+                competencia: Competencia.getCompetencia(data).codigo
+            });
+        });
+
+        return this.dedupeImportRecords(registros);
+    },
+
+    extractImportPeriod(texto) {
+        const match = String(texto || "").match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})\s*[-–]\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+
+        if (!match) {
+            return null;
+        }
+
+        const [, diaInicio, mesInicio, anoInicio, diaFim, mesFim, anoFim] = match;
+
+        return {
+            inicio: new Date(Number(anoInicio), Number(mesInicio) - 1, Number(diaInicio)),
+            fim: new Date(Number(anoFim), Number(mesFim) - 1, Number(diaFim))
+        };
+    },
+
+    normalizarDataComPeriodo(dia, mes, anoLinha, periodo) {
+        if (anoLinha) {
+            return this.normalizarDataImportacao(`${dia}/${mes}/${anoLinha}`);
+        }
+
+        const diaNumero = Number(dia);
+        const mesNumero = Number(mes);
+
+        if (!diaNumero || !mesNumero) {
+            return "";
+        }
+
+        if (!periodo) {
+            const anoAtual = new Date().getFullYear();
+            return this.normalizarDataImportacao(`${dia}/${mes}/${anoAtual}`);
+        }
+
+        const anos = [
+            periodo.inicio.getFullYear() - 1,
+            periodo.inicio.getFullYear(),
+            periodo.fim.getFullYear(),
+            periodo.fim.getFullYear() + 1
+        ];
+        const escolhido = anos
+            .map(ano => new Date(ano, mesNumero - 1, diaNumero))
+            .find(data => data >= periodo.inicio && data <= periodo.fim);
+
+        if (!escolhido) {
+            return "";
+        }
+
+        return Competencia.formatarDataISO(escolhido);
     },
 
     parsePlainTimesheetText(texto) {
@@ -805,10 +998,28 @@ const App = {
             }
         }
 
+        const competenciaImportada = this.getCompetenciaPredominante(this.state.importRecords);
+
+        if (competenciaImportada) {
+            this.state.competencia = Competencia.competenciaPorCodigo(competenciaImportada);
+            localStorage.setItem("csdcontrol.competencia", competenciaImportada);
+        }
+
         await this.carregarApontamentos();
         this.closeImportModal();
         this.render();
         this.showToast(`${criados + atualizados} registro(s) importados.`);
+    },
+
+    getCompetenciaPredominante(registros) {
+        const contagem = registros.reduce((acc, registro) => {
+            const codigo = registro.competencia || Competencia.getCompetencia(registro.data).codigo;
+            acc[codigo] = (acc[codigo] || 0) + 1;
+            return acc;
+        }, {});
+
+        return Object.entries(contagem)
+            .sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0]?.[0] || "";
     },
 
     editarApontamento(id) {
@@ -901,11 +1112,23 @@ const App = {
 
     render() {
         this.dom.competenciaAtual.textContent = Competencia.formatarCompetencia(this.state.competencia);
+        this.renderCompetenciaSelect();
         this.renderDashboard();
         this.renderTabela();
         this.renderFolha();
         this.renderHistorico();
         this.renderPreview();
+    },
+
+    renderCompetenciaSelect() {
+        const competencias = this.getCompetenciasDisponiveis();
+
+        this.dom.competenciaSelect.innerHTML = competencias.map(competencia => `
+            <option value="${competencia.codigo}">
+                ${Competencia.formatarCompetencia(competencia)}
+            </option>
+        `).join("");
+        this.dom.competenciaSelect.value = this.state.competencia.codigo;
     },
 
     renderDashboard() {
