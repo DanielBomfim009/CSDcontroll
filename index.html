@@ -10,7 +10,63 @@
     <link rel="icon" href="./assets/img/icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="./assets/css/app.css">
 </head>
-<body>
+<body class="auth-active" data-auth-mode="login">
+    <section class="auth-screen" id="authScreen" aria-labelledby="authTitle">
+        <div class="auth-motion" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="auth-card">
+            <div class="auth-brand">
+                <span class="auth-logo">SP</span>
+                <div>
+                    <p class="eyebrow">SalárioPro</p>
+                    <h1 id="authTitle">Controle salarial</h1>
+                </div>
+            </div>
+
+            <form class="auth-form is-active" id="loginForm">
+                <label>
+                    E-mail
+                    <input type="email" id="loginEmail" autocomplete="email" required>
+                </label>
+                <label>
+                    Senha
+                    <input type="password" id="loginPassword" autocomplete="current-password" required>
+                </label>
+                <button class="auth-submit" type="submit">
+                    Entrar
+                    <span aria-hidden="true">→</span>
+                </button>
+                <button class="auth-link" type="button" data-auth-mode="signup">Criar cadastro</button>
+            </form>
+
+            <form class="auth-form" id="signupForm">
+                <label>
+                    Nome
+                    <input type="text" id="signupName" autocomplete="name" required>
+                </label>
+                <label>
+                    E-mail
+                    <input type="email" id="signupEmail" autocomplete="email" required>
+                </label>
+                <label>
+                    Senha
+                    <input type="password" id="signupPassword" autocomplete="new-password" minlength="4" required>
+                </label>
+                <button class="auth-submit" type="submit">
+                    Cadastrar
+                    <span aria-hidden="true">→</span>
+                </button>
+                <button class="auth-link" type="button" data-auth-mode="login">Já tenho conta</button>
+            </form>
+
+            <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+        </div>
+    </section>
+
     <div class="app-shell">
         <aside class="sidebar" aria-label="Navegação principal">
             <a class="brand" href="#dashboard" aria-label="Ir para dashboard">
@@ -305,6 +361,10 @@
                             <span>Domingo / feriado</span>
                             <strong>HE 100%</strong>
                         </article>
+                        <article class="setting-row">
+                            <span>Sessão</span>
+                            <button class="row-action" type="button" id="logoutBtn">Sair</button>
+                        </article>
                     </div>
                 </section>
             </main>
@@ -326,9 +386,9 @@
             </div>
 
             <label class="file-drop">
-                <input type="file" id="importFile" accept=".csv,.txt,text/csv,text/plain">
+                <input type="file" id="importFile" accept=".pdf,.csv,.txt,application/pdf,text/csv,text/plain">
                 <span>Selecionar arquivo</span>
-                <strong id="importFileName">CSV ou TXT</strong>
+                <strong id="importFileName">PDF, CSV ou TXT</strong>
             </label>
 
             <div class="import-summary" id="importSummary">Nenhum arquivo selecionado.</div>

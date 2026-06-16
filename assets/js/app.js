@@ -6,11 +6,31 @@ const App = {
         view: "dashboard",
         editId: null,
         pendingDeleteId: null,
-        importRecords: []
+        importRecords: [],
+        started: false
     },
 
     async init() {
         this.cacheDom();
+        this.bindAuthEvents();
+        this.registrarServiceWorker();
+
+        if (!this.isAuthenticated()) {
+            this.showAuth();
+            return;
+        }
+
+        await this.startApp();
+    },
+
+    async startApp() {
+        if (this.state.started) {
+            this.hideAuth();
+            this.render();
+            return;
+        }
+
+        this.state.started = true;
         this.state.competencia = Competencia.getCompetencia();
         this.definirDataPadrao();
         this.bindEvents();
@@ -25,7 +45,7 @@ const App = {
             this.showToast(error.message || "Não foi possível iniciar o banco local.");
         }
 
-        this.registrarServiceWorker();
+        this.hideAuth();
     },
 
     cacheDom() {
@@ -56,8 +76,140 @@ const App = {
             importFileName: this.$("#importFileName"),
             importSummary: this.$("#importSummary"),
             confirmImportBtn: this.$("#confirmImportBtn"),
+            authScreen: this.$("#authScreen"),
+            loginForm: this.$("#loginForm"),
+            signupForm: this.$("#signupForm"),
+            loginEmail: this.$("#loginEmail"),
+            loginPassword: this.$("#loginPassword"),
+            signupName: this.$("#signupName"),
+            signupEmail: this.$("#signupEmail"),
+            signupPassword: this.$("#signupPassword"),
+            authMessage: this.$("#authMessage"),
+            authModeButtons: this.$$("[data-auth-mode]"),
+            logoutBtn: this.$("#logoutBtn"),
             toast: this.$("#toast")
         };
+    },
+
+    bindAuthEvents() {
+        this.dom.loginForm.addEventListener("submit", event => this.login(event));
+        this.dom.signupForm.addEventListener("submit", event => this.signup(event));
+        this.dom.authModeButtons.forEach(button => {
+            button.addEventListener("click", () => this.setAuthMode(button.dataset.authMode));
+        });
+        this.dom.logoutBtn.addEventListener("click", () => this.logout());
+    },
+
+    getLocalUser() {
+        try {
+            return JSON.parse(localStorage.getItem("salariopro.user") || "null");
+        } catch (error) {
+            return null;
+        }
+    },
+
+    isAuthenticated() {
+        const user = this.getLocalUser();
+        const session = localStorage.getItem("salariopro.session");
+        return Boolean(user && session === user.email);
+    },
+
+    showAuth(mode = null) {
+        const nextMode = mode || (this.getLocalUser() ? "login" : "signup");
+        document.body.classList.add("auth-active");
+        this.setAuthMode(nextMode);
+    },
+
+    hideAuth() {
+        document.body.classList.remove("auth-active");
+        this.text("#authMessage", "");
+    },
+
+    setAuthMode(mode) {
+        const isSignup = mode === "signup";
+        document.body.dataset.authMode = isSignup ? "signup" : "login";
+        this.dom.loginForm.classList.toggle("is-active", !isSignup);
+        this.dom.signupForm.classList.toggle("is-active", isSignup);
+        this.text("#authMessage", "");
+    },
+
+    async login(event) {
+        event.preventDefault();
+        const user = this.getLocalUser();
+        const email = this.dom.loginEmail.value.trim().toLowerCase();
+        const senha = this.dom.loginPassword.value;
+
+        if (!user) {
+            this.setAuthMode("signup");
+            this.text("#authMessage", "Crie seu cadastro local.");
+            return;
+        }
+
+        const senhaHash = await this.hashPassword(senha);
+        const hashSalvo = user.senhaHash || await this.hashPassword(user.senha || "");
+
+        if (user.email !== email || hashSalvo !== senhaHash) {
+            this.text("#authMessage", "E-mail ou senha inválidos.");
+            return;
+        }
+
+        if (!user.senhaHash) {
+            const usuarioAtualizado = { nome: user.nome, email: user.email, senhaHash };
+            localStorage.setItem("salariopro.user", JSON.stringify(usuarioAtualizado));
+        }
+
+        localStorage.setItem("salariopro.session", user.email);
+        this.dom.loginPassword.value = "";
+        await this.startApp();
+    },
+
+    async signup(event) {
+        event.preventDefault();
+        const user = {
+            nome: this.dom.signupName.value.trim(),
+            email: this.dom.signupEmail.value.trim().toLowerCase(),
+            senha: this.dom.signupPassword.value
+        };
+
+        if (!user.nome || !user.email || user.senha.length < 4) {
+            this.text("#authMessage", "Preencha os dados do cadastro.");
+            return;
+        }
+
+        const usuarioLocal = {
+            nome: user.nome,
+            email: user.email,
+            senhaHash: await this.hashPassword(user.senha)
+        };
+
+        localStorage.setItem("salariopro.user", JSON.stringify(usuarioLocal));
+        localStorage.setItem("salariopro.session", user.email);
+        this.dom.signupPassword.value = "";
+        await this.startApp();
+    },
+
+    logout() {
+        localStorage.removeItem("salariopro.session");
+        this.showAuth("login");
+    },
+
+    async hashPassword(valor) {
+        if (window.crypto?.subtle) {
+            const bytes = new TextEncoder().encode(`salariopro:${valor}`);
+            const hash = await crypto.subtle.digest("SHA-256", bytes);
+            return Array.from(new Uint8Array(hash))
+                .map(byte => byte.toString(16).padStart(2, "0"))
+                .join("");
+        }
+
+        let hash = 5381;
+
+        for (let index = 0; index < valor.length; index += 1) {
+            hash = ((hash << 5) + hash) + valor.charCodeAt(index);
+            hash >>>= 0;
+        }
+
+        return `fallback:${hash.toString(16)}`;
     },
 
     bindEvents() {
@@ -200,7 +352,7 @@ const App = {
     openImportModal() {
         this.state.importRecords = [];
         this.dom.importFile.value = "";
-        this.dom.importFileName.textContent = "CSV ou TXT";
+        this.dom.importFileName.textContent = "PDF, CSV ou TXT";
         this.dom.importSummary.textContent = "Nenhum arquivo selecionado.";
         this.dom.confirmImportBtn.disabled = true;
         this.dom.importModal.classList.add("is-visible");
@@ -226,7 +378,8 @@ const App = {
         this.dom.confirmImportBtn.disabled = true;
 
         try {
-            const texto = await file.text();
+            const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+            const texto = isPdf ? await this.extractPdfText(file) : await file.text();
             const registros = this.parseImportText(texto);
             this.state.importRecords = registros;
             this.renderImportSummary(registros);
@@ -239,13 +392,93 @@ const App = {
         }
     },
 
+    async extractPdfText(file) {
+        try {
+            const pdfjs = await this.loadPdfJs();
+            const data = await file.arrayBuffer();
+            const pdf = await pdfjs.getDocument({ data }).promise;
+            const paginas = [];
+
+            for (let pagina = 1; pagina <= pdf.numPages; pagina += 1) {
+                const page = await pdf.getPage(pagina);
+                const content = await page.getTextContent();
+                paginas.push(content.items.map(item => item.str).join(" "));
+            }
+
+            return paginas.join("\n");
+        } catch (error) {
+            console.warn("PDF.js indisponível. Usando extração básica.", error);
+            return this.extractPdfTextFallback(file);
+        }
+    },
+
+    loadPdfJs() {
+        if (window.pdfjsLib) {
+            return Promise.resolve(window.pdfjsLib);
+        }
+
+        return new Promise((resolve, reject) => {
+            const existente = document.querySelector("[data-pdfjs]");
+
+            if (existente) {
+                existente.addEventListener("load", () => resolve(window.pdfjsLib), { once: true });
+                existente.addEventListener("error", reject, { once: true });
+                return;
+            }
+
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+            script.async = true;
+            script.dataset.pdfjs = "true";
+            script.onload = () => {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+                resolve(window.pdfjsLib);
+            };
+            script.onerror = () => reject(new Error("PDF.js indisponível."));
+            document.head.appendChild(script);
+        });
+    },
+
+    async extractPdfTextFallback(file) {
+        const buffer = await file.arrayBuffer();
+        const raw = new TextDecoder("latin1").decode(buffer);
+        const partes = [];
+        const literalRegex = /\((?:\\.|[^\\)])*\)/g;
+        const hexRegex = /<([0-9A-Fa-f\s]{4,})>/g;
+        let match;
+
+        while ((match = literalRegex.exec(raw))) {
+            partes.push(this.decodePdfLiteral(match[0].slice(1, -1)));
+        }
+
+        while ((match = hexRegex.exec(raw))) {
+            const hex = match[1].replace(/\s/g, "");
+
+            if (hex.length % 2 === 0) {
+                const bytes = hex.match(/.{2}/g).map(par => parseInt(par, 16));
+                partes.push(new TextDecoder("latin1").decode(new Uint8Array(bytes)));
+            }
+        }
+
+        return partes.join("\n");
+    },
+
+    decodePdfLiteral(texto) {
+        return texto
+            .replace(/\\([nrtbf()\\])/g, (_, char) => {
+                const escapes = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f", "(": "(", ")": ")", "\\": "\\" };
+                return escapes[char] || char;
+            })
+            .replace(/\\([0-7]{1,3})/g, (_, octal) => String.fromCharCode(parseInt(octal, 8)));
+    },
+
     parseImportText(texto) {
         const linhas = this.parseCsv(texto)
             .map(linha => linha.map(celula => celula.trim()))
             .filter(linha => linha.some(Boolean));
 
         if (linhas.length === 0) {
-            return [];
+            return this.parsePlainTimesheetText(texto);
         }
 
         const cabecalho = linhas[0].map(celula => this.normalizarCabecalho(celula));
@@ -261,6 +494,67 @@ const App = {
             }
         });
 
+        if (registros.length) {
+            return this.dedupeImportRecords(registros);
+        }
+
+        return this.parsePlainTimesheetText(texto);
+    },
+
+    parsePlainTimesheetText(texto) {
+        const linhas = String(texto || "")
+            .replace(/\r/g, "\n")
+            .split("\n")
+            .map(linha => linha.replace(/\s+/g, " ").trim())
+            .filter(Boolean);
+        const registros = [];
+        const dataRegex = /(\d{4}-\d{2}-\d{2}|\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4})/;
+        const horaRegex = /\b(?:[01]?\d|2[0-3])[:h.][0-5]\d\b/g;
+
+        linhas.forEach((linha, index) => {
+            const bloco = [linha, linhas[index + 1], linhas[index + 2]]
+                .filter(Boolean)
+                .join(" ");
+            const dataMatch = bloco.match(dataRegex);
+
+            if (!dataMatch) {
+                return;
+            }
+
+            const horarios = Array.from(bloco.matchAll(horaRegex))
+                .map(match => this.normalizarHorario(match[0]))
+                .filter(Boolean);
+
+            if (horarios.length < 2) {
+                return;
+            }
+
+            const data = this.normalizarDataImportacao(dataMatch[1]);
+            const entrada = horarios[0];
+            const saidaAlmoco = horarios.length >= 4 ? horarios[1] : "12:00";
+            const retornoAlmoco = horarios.length >= 4 ? horarios[2] : "13:00";
+            const saida = horarios[horarios.length - 1];
+            const feriado = /feriado|domingo|he\s*100/i.test(bloco);
+
+            if (!data || !entrada || !saida) {
+                return;
+            }
+
+            registros.push({
+                data,
+                entrada,
+                saidaAlmoco,
+                retornoAlmoco,
+                saida,
+                feriado,
+                competencia: Competencia.getCompetencia(data).codigo
+            });
+        });
+
+        return this.dedupeImportRecords(registros);
+    },
+
+    dedupeImportRecords(registros) {
         return Array.from(new Map(registros.map(registro => [registro.data, registro])).values())
             .sort((a, b) => b.data.localeCompare(a.data));
     },
