@@ -1,6 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SalarioPro">
-    <rect width="256" height="256" rx="48" fill="#101114"/>
-    <rect x="30" y="30" width="196" height="196" rx="28" fill="#1a1d23" stroke="#47d6b6" stroke-width="8"/>
-    <path d="M72 87h112v22H72V87Zm0 42h112v22H72v-22Zm0 42h72v22H72v-22Z" fill="#f4f5f7"/>
-    <path d="M170 166c0-14 11-25 25-25h5v20h-5c-3 0-5 2-5 5s2 5 5 5h10v20h-10c-14 0-25-11-25-25Z" fill="#47d6b6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SalárioPro">
+    <rect width="256" height="256" rx="52" fill="#f6f8fb"/>
+    <rect x="30" y="30" width="196" height="196" rx="34" fill="#ffffff" stroke="#dbe5ee" stroke-width="6"/>
+    <rect x="54" y="58" width="148" height="44" rx="12" fill="#e7f8f4"/>
+    <path d="M73 78h64v8H73v-8Zm0 48h110v12H73v-12Zm0 34h82v12H73v-12Z" fill="#172033"/>
+    <path d="M160 78c0-11 9-20 20-20h7v16h-7a4 4 0 0 0 0 8h12v16h-12c-11 0-20-9-20-20Z" fill="#0f9f8a"/>
+    <circle cx="184" cy="164" r="24" fill="#0f9f8a"/>
+    <path d="M173 164l7 7 15-17" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
