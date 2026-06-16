@@ -106,6 +106,12 @@
                     </span>
                     <span>Meses</span>
                 </button>
+                <button class="nav-item" type="button" data-view="comparativo">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 5h6v14H4V5Zm10 4h6v10h-6V9ZM9 3h6v4H9V3Z"/></svg>
+                    </span>
+                    <span>Comparar</span>
+                </button>
                 <button class="nav-item" type="button" data-view="configuracoes">
                     <span class="nav-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65-2-3.46-2.49 1a7.28 7.28 0 0 0-1.69-.98L15 3h-4l-.36 2.93c-.6.24-1.17.57-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65 2 3.46 2.49-1c.52.41 1.09.74 1.69.98L11 21h4l.36-2.93c.6-.24 1.17-.57 1.69-.98l2.49 1 2-3.46-2.11-1.65ZM13 15.73A4 4 0 1 1 13 8a4 4 0 0 1 0 7.73Z"/></svg>
@@ -349,7 +355,39 @@
                             <h2 id="historicoTitle">Histórico</h2>
                         </div>
                     </div>
-                    <div class="history-list" id="historicoLista"></div>
+                    <div class="history-columns">
+                        <section class="surface-panel" aria-labelledby="historicoRecebidosTitle">
+                            <div class="panel-title">
+                                <h3 id="historicoRecebidosTitle">Contracheques importados</h3>
+                                <span id="historicoRecebidosCount">0 arquivo(s)</span>
+                            </div>
+                            <div class="history-list history-received-list" id="historicoRecebidosLista"></div>
+                        </section>
+                        <section class="surface-panel" aria-labelledby="historicoProjecoesTitle">
+                            <div class="panel-title">
+                                <h3 id="historicoProjecoesTitle">Projeções por competência</h3>
+                                <span id="historicoProjecoesCount">0 competência(s)</span>
+                            </div>
+                            <div class="history-list history-projection-list" id="historicoLista"></div>
+                        </section>
+                    </div>
+                </section>
+
+                <section class="view" data-panel="comparativo" aria-labelledby="comparativoTitle">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Previsto x recebido</p>
+                            <h2 id="comparativoTitle">Comparativo</h2>
+                        </div>
+                    </div>
+                    <div class="comparison-grid" id="comparativoGrid"></div>
+                    <section class="surface-panel" aria-labelledby="comparativoDetalhesTitle">
+                        <div class="panel-title">
+                            <h3 id="comparativoDetalhesTitle">Detalhes da competência</h3>
+                            <span id="comparativoPeriodo">Sem contracheque importado</span>
+                        </div>
+                        <div class="breakdown-list" id="comparativoLista"></div>
+                    </section>
                 </section>
 
                 <section class="view" data-panel="configuracoes" aria-labelledby="configTitle">
@@ -388,6 +426,13 @@
                             <span>Sessão</span>
                             <button class="row-action" type="button" id="logoutBtn">Sair</button>
                         </article>
+                        <article class="setting-row setting-action-row">
+                            <div>
+                                <span>Contracheques</span>
+                                <small id="payslipCount">0 arquivo(s) importados</small>
+                            </div>
+                            <button class="row-action" type="button" id="openPayslipImportBtn">Importar PDF</button>
+                        </article>
                     </div>
                 </section>
             </main>
@@ -419,6 +464,33 @@
             <div class="form-actions">
                 <button class="primary-action" type="button" id="confirmImportBtn" disabled>Importar registros</button>
                 <button class="ghost-action" type="button" id="cancelImportBtn">Cancelar</button>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal-layer" id="payslipModal" aria-hidden="true">
+        <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="payslipTitle">
+            <div class="modal-head">
+                <div>
+                    <p class="eyebrow">Histórico recebido</p>
+                    <h2 id="payslipTitle">Importar contracheque</h2>
+                </div>
+                <button class="icon-button" type="button" id="closePayslipBtn" aria-label="Fechar importação de contracheque">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5Zm11.2 0L19 6.4 6.4 19 5 17.6 17.6 5Z"/></svg>
+                </button>
+            </div>
+
+            <label class="file-drop">
+                <input type="file" id="payslipFile" accept=".pdf,application/pdf">
+                <span>Selecionar contracheque</span>
+                <strong id="payslipFileName">PDF do contracheque</strong>
+            </label>
+
+            <div class="import-summary" id="payslipSummary">Nenhum arquivo selecionado.</div>
+
+            <div class="form-actions">
+                <button class="primary-action" type="button" id="confirmPayslipBtn" disabled>Salvar histórico</button>
+                <button class="ghost-action" type="button" id="cancelPayslipBtn">Cancelar</button>
             </div>
         </section>
     </div>

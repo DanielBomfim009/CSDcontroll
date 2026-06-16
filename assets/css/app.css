@@ -823,7 +823,14 @@ tbody tr:hover {
 }
 
 .history-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+}
+
+.history-columns,
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
 }
 
 .history-row {
@@ -833,6 +840,48 @@ tbody tr:hover {
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: var(--shadow);
+}
+
+.comparison-grid {
+    margin-bottom: 12px;
+}
+
+.comparison-card {
+    min-height: 148px;
+}
+
+.comparison-card strong {
+    font-size: clamp(26px, 4vw, 34px);
+}
+
+.comparison-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 58px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.comparison-row:last-child {
+    border-bottom: 0;
+}
+
+.comparison-row strong:last-child {
+    text-align: right;
+}
+
+.comparison-empty {
+    grid-column: 1 / -1;
+}
+
+.delta-positive {
+    color: var(--success);
+}
+
+.delta-negative {
+    color: var(--danger);
 }
 
 .settings-grid {
@@ -853,6 +902,16 @@ tbody tr:hover {
 .setting-row span {
     color: var(--muted);
     font-size: 13px;
+}
+
+.setting-action-row > div {
+    display: grid;
+    gap: 4px;
+}
+
+.setting-action-row small {
+    color: var(--muted);
+    font-size: 12px;
 }
 
 .setting-row strong {
@@ -1032,7 +1091,7 @@ body.modal-open {
         left: 0;
         z-index: 70;
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         width: 100%;
         max-width: 100%;
         min-height: calc(var(--mobile-nav) + env(safe-area-inset-bottom));
@@ -1078,6 +1137,7 @@ body.modal-open {
     body[data-view="apontamentos"] .side-nav .nav-item[data-view="apontamentos"],
     body[data-view="folha"] .side-nav .nav-item[data-view="folha"],
     body[data-view="historico"] .side-nav .nav-item[data-view="historico"],
+    body[data-view="comparativo"] .side-nav .nav-item[data-view="comparativo"],
     body[data-view="configuracoes"] .side-nav .nav-item[data-view="configuracoes"] {
         border-color: rgba(15, 159, 138, 0.22);
         background: var(--accent-soft);
@@ -1150,6 +1210,11 @@ body.modal-open {
     .payroll-grid,
     .history-list,
     .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .history-columns,
+    .comparison-grid {
         grid-template-columns: 1fr;
     }
 
@@ -1697,6 +1762,7 @@ input:focus {
     body[data-view="apontamentos"] .side-nav .nav-item[data-view="apontamentos"],
     body[data-view="folha"] .side-nav .nav-item[data-view="folha"],
     body[data-view="historico"] .side-nav .nav-item[data-view="historico"],
+    body[data-view="comparativo"] .side-nav .nav-item[data-view="comparativo"],
     body[data-view="configuracoes"] .side-nav .nav-item[data-view="configuracoes"] {
         border-color: transparent;
         background: var(--accent-soft);
@@ -1707,6 +1773,7 @@ input:focus {
     body[data-view="apontamentos"] .side-nav .nav-item[data-view="apontamentos"] .nav-icon,
     body[data-view="folha"] .side-nav .nav-item[data-view="folha"] .nav-icon,
     body[data-view="historico"] .side-nav .nav-item[data-view="historico"] .nav-icon,
+    body[data-view="comparativo"] .side-nav .nav-item[data-view="comparativo"] .nav-icon,
     body[data-view="configuracoes"] .side-nav .nav-item[data-view="configuracoes"] .nav-icon {
         background: transparent;
         color: var(--accent-strong);
@@ -2273,6 +2340,7 @@ body[data-view="dashboard"]:not(.auth-active) .side-nav .nav-item[data-view="das
 body[data-view="apontamentos"]:not(.auth-active) .side-nav .nav-item[data-view="apontamentos"],
 body[data-view="folha"]:not(.auth-active) .side-nav .nav-item[data-view="folha"],
 body[data-view="historico"]:not(.auth-active) .side-nav .nav-item[data-view="historico"],
+body[data-view="comparativo"]:not(.auth-active) .side-nav .nav-item[data-view="comparativo"],
 body[data-view="configuracoes"]:not(.auth-active) .side-nav .nav-item[data-view="configuracoes"] {
     border-color: rgba(37, 99, 235, 0.18);
     background: rgba(239, 246, 255, 0.92);
@@ -2284,6 +2352,7 @@ body[data-view="dashboard"]:not(.auth-active) .side-nav .nav-item[data-view="das
 body[data-view="apontamentos"]:not(.auth-active) .side-nav .nav-item[data-view="apontamentos"] .nav-icon,
 body[data-view="folha"]:not(.auth-active) .side-nav .nav-item[data-view="folha"] .nav-icon,
 body[data-view="historico"]:not(.auth-active) .side-nav .nav-item[data-view="historico"] .nav-icon,
+body[data-view="comparativo"]:not(.auth-active) .side-nav .nav-item[data-view="comparativo"] .nav-icon,
 body[data-view="configuracoes"]:not(.auth-active) .side-nav .nav-item[data-view="configuracoes"] .nav-icon {
     background: rgba(37, 99, 235, 0.1);
     color: #2563eb;

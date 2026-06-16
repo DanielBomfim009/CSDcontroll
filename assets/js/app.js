@@ -3,10 +3,12 @@ const App = {
         competencia: null,
         apontamentos: [],
         todosApontamentos: [],
+        holerites: [],
         view: "dashboard",
         editId: null,
         pendingDeleteId: null,
         importRecords: [],
+        importPayslip: null,
         started: false
     },
 
@@ -39,6 +41,7 @@ const App = {
         try {
             await DB.init();
             await this.carregarApontamentos();
+            await this.carregarHolerites();
             this.aplicarCompetenciaSalva();
             this.render();
         } catch (error) {
@@ -80,6 +83,21 @@ const App = {
             importFileName: this.$("#importFileName"),
             importSummary: this.$("#importSummary"),
             confirmImportBtn: this.$("#confirmImportBtn"),
+            historicoRecebidosLista: this.$("#historicoRecebidosLista"),
+            historicoRecebidosCount: this.$("#historicoRecebidosCount"),
+            historicoProjecoesCount: this.$("#historicoProjecoesCount"),
+            comparativoGrid: this.$("#comparativoGrid"),
+            comparativoPeriodo: this.$("#comparativoPeriodo"),
+            comparativoLista: this.$("#comparativoLista"),
+            openPayslipImportBtn: this.$("#openPayslipImportBtn"),
+            payslipCount: this.$("#payslipCount"),
+            payslipModal: this.$("#payslipModal"),
+            closePayslipBtn: this.$("#closePayslipBtn"),
+            cancelPayslipBtn: this.$("#cancelPayslipBtn"),
+            payslipFile: this.$("#payslipFile"),
+            payslipFileName: this.$("#payslipFileName"),
+            payslipSummary: this.$("#payslipSummary"),
+            confirmPayslipBtn: this.$("#confirmPayslipBtn"),
             resumoFinanceiro: this.$("#resumoFinanceiro"),
             resumoFgts: this.$("#resumoFgts"),
             authScreen: this.$("#authScreen"),
@@ -240,10 +258,20 @@ const App = {
         this.dom.cancelImportBtn.addEventListener("click", () => this.closeImportModal());
         this.dom.confirmImportBtn.addEventListener("click", () => this.importarRegistros());
         this.dom.importFile.addEventListener("change", event => this.handleImportFile(event));
+        this.dom.openPayslipImportBtn.addEventListener("click", () => this.openPayslipModal());
+        this.dom.closePayslipBtn.addEventListener("click", () => this.closePayslipModal());
+        this.dom.cancelPayslipBtn.addEventListener("click", () => this.closePayslipModal());
+        this.dom.confirmPayslipBtn.addEventListener("click", () => this.importarContracheque());
+        this.dom.payslipFile.addEventListener("change", event => this.handlePayslipFile(event));
         this.dom.competenciaSelect.addEventListener("change", event => this.setCompetencia(event.target.value));
         this.dom.importModal.addEventListener("click", event => {
             if (event.target === this.dom.importModal) {
                 this.closeImportModal();
+            }
+        });
+        this.dom.payslipModal.addEventListener("click", event => {
+            if (event.target === this.dom.payslipModal) {
+                this.closePayslipModal();
             }
         });
 
@@ -286,6 +314,13 @@ const App = {
         this.filtrarApontamentos();
     },
 
+    async carregarHolerites() {
+        const registros = await DB.getAll(STORES.HISTORICO);
+        this.state.holerites = registros
+            .filter(registro => registro.tipo === "contracheque")
+            .sort((a, b) => (b.competencia || "").localeCompare(a.competencia || ""));
+    },
+
     filtrarApontamentos() {
         this.state.apontamentos = this.state.todosApontamentos
             .filter(apontamento => Competencia.pertenceCompetencia(apontamento.data, this.state.competencia));
@@ -324,6 +359,12 @@ const App = {
 
         this.state.todosApontamentos.forEach(apontamento => {
             codigos.add(apontamento.competencia || Competencia.getCompetencia(apontamento.data).codigo);
+        });
+
+        this.state.holerites.forEach(holerite => {
+            if (holerite.competencia) {
+                codigos.add(holerite.competencia);
+            }
         });
 
         return Array.from(codigos)
@@ -418,6 +459,23 @@ const App = {
         document.body.classList.remove("modal-open");
     },
 
+    openPayslipModal() {
+        this.state.importPayslip = null;
+        this.dom.payslipFile.value = "";
+        this.dom.payslipFileName.textContent = "PDF do contracheque";
+        this.dom.payslipSummary.textContent = "Nenhum arquivo selecionado.";
+        this.dom.confirmPayslipBtn.disabled = true;
+        this.dom.payslipModal.classList.add("is-visible");
+        this.dom.payslipModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+    },
+
+    closePayslipModal() {
+        this.dom.payslipModal.classList.remove("is-visible");
+        this.dom.payslipModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+    },
+
     async handleImportFile(event) {
         const [file] = event.target.files;
 
@@ -441,6 +499,40 @@ const App = {
             this.state.importRecords = [];
             this.dom.importSummary.textContent = "Arquivo não reconhecido.";
             this.showToast("Não foi possível importar esse arquivo.");
+        }
+    },
+
+    async handlePayslipFile(event) {
+        const [file] = event.target.files;
+
+        if (!file) {
+            return;
+        }
+
+        this.dom.payslipFileName.textContent = file.name;
+        this.dom.payslipSummary.textContent = "Lendo contracheque...";
+        this.dom.confirmPayslipBtn.disabled = true;
+
+        try {
+            const texto = await this.extractPdfText(file);
+            const contracheque = this.parsePayslipText(texto, file.name);
+
+            if (!contracheque) {
+                throw new Error("Contracheque não reconhecido.");
+            }
+
+            this.state.importPayslip = contracheque;
+            this.dom.confirmPayslipBtn.disabled = false;
+            this.dom.payslipSummary.innerHTML = `
+                <strong>${contracheque.competencia}</strong>
+                <span>${Competencia.formatarCompetencia(Competencia.competenciaPorCodigo(contracheque.competencia))}</span>
+                <span>Pagamento ${Folha.moeda(contracheque.liquidoReceber)} · Mês ${Folha.moeda(contracheque.totalRecebidoMes)}</span>
+            `;
+        } catch (error) {
+            console.error(error);
+            this.state.importPayslip = null;
+            this.dom.payslipSummary.textContent = "Não foi possível reconhecer esse contracheque.";
+            this.showToast("PDF do contracheque não reconhecido.");
         }
     },
 
@@ -587,6 +679,79 @@ const App = {
         }
 
         return this.parsePlainTimesheetText(texto);
+    },
+
+    parsePayslipText(texto, fileName = "") {
+        const competencia = this.extractPayslipCompetencia(texto, fileName);
+
+        if (!competencia) {
+            return null;
+        }
+
+        const extrairValor = pattern => {
+            const match = String(texto || "").match(pattern);
+            return match ? this.moedaParaNumero(match[1]) : 0;
+        };
+        const extrairTotais = () => {
+            const match = String(texto || "").match(/([\d.]+,\d{2})\s+([\d.]+,\d{2})\s*\nTotal L[ií]quido Pgto:\s*([\d.]+,\d{2})/i);
+
+            if (!match) {
+                return null;
+            }
+
+            return {
+                proventos: this.moedaParaNumero(match[1]),
+                descontos: this.moedaParaNumero(match[2]),
+                liquidoReceber: this.moedaParaNumero(match[3])
+            };
+        };
+
+        const totais = extrairTotais();
+
+        if (!totais) {
+            return null;
+        }
+
+        const fgts = extrairValor(/IR:\s*\d+.*?[\d.]+,\d{2}\s+[\d.]+,\d{2}\s+([\d.]+,\d{2})/i);
+        const adiantamento = extrairValor(/Desconto Adiantamento Salarial\s+[\d.,]+\s+([\d.]+,\d{2})/i);
+        const inss = extrairValor(/INSS\s+[\d.,]+\s+([\d.]+,\d{2})/i);
+        const irrf = extrairValor(/Imposto de Renda\s+[\d.,]+\s+([\d.]+,\d{2})/i);
+        const irrfAdiantamento = extrairValor(/Imposto de Renda - Adiant\. Quinzenal\s+[\d.,]+\s+([\d.]+,\d{2})/i);
+
+        return {
+            tipo: "contracheque",
+            competencia,
+            arquivo: fileName,
+            importadoEm: new Date().toISOString(),
+            proventos: totais.proventos,
+            descontos: totais.descontos,
+            liquidoReceber: totais.liquidoReceber,
+            fgts,
+            adiantamento,
+            totalRecebidoMes: Folha.arredondar(adiantamento + totais.liquidoReceber),
+            inss,
+            irrf,
+            irrfAdiantamento
+        };
+    },
+
+    extractPayslipCompetencia(texto, fileName = "") {
+        const nome = String(fileName || "");
+        const matchNome = nome.match(/-(\d{2})-(\d{4})/);
+
+        if (matchNome) {
+            const [, mes, ano] = matchNome;
+            return `${ano}-${mes}`;
+        }
+
+        const matchTexto = String(texto || "").match(/contracheque.*?(\d{2})[\/-](\d{4})/i);
+
+        if (matchTexto) {
+            const [, mes, ano] = matchTexto;
+            return `${ano}-${mes}`;
+        }
+
+        return "";
     },
 
     parseCompanyTimesheetText(texto) {
@@ -1006,6 +1171,16 @@ const App = {
             .includes(String(valor || "").trim().toLowerCase());
     },
 
+    moedaParaNumero(valor) {
+        const texto = String(valor || "").trim();
+
+        if (!texto) {
+            return 0;
+        }
+
+        return Number(texto.replace(/\./g, "").replace(",", ".")) || 0;
+    },
+
     renderImportSummary(registros) {
         if (!registros.length) {
             this.dom.importSummary.textContent = "Nenhum registro válido encontrado.";
@@ -1069,6 +1244,33 @@ const App = {
         this.closeImportModal();
         this.render();
         this.showToast(`${criados + atualizados} registro(s) importados.`);
+    },
+
+    async importarContracheque() {
+        if (!this.state.importPayslip) {
+            return;
+        }
+
+        const existentes = await DB.getAll(STORES.HISTORICO);
+        const existente = existentes.find(item =>
+            item.tipo === "contracheque" &&
+            item.competencia === this.state.importPayslip.competencia
+        );
+        const payload = {
+            ...this.state.importPayslip
+        };
+
+        if (existente) {
+            payload.id = existente.id;
+            await DB.update(STORES.HISTORICO, payload);
+        } else {
+            await DB.add(STORES.HISTORICO, payload);
+        }
+
+        await this.carregarHolerites();
+        this.closePayslipModal();
+        this.render();
+        this.showToast("Contracheque salvo no histórico.");
     },
 
     getCompetenciaPredominante(registros) {
@@ -1149,6 +1351,7 @@ const App = {
             apontamentos: "Registro de ponto",
             folha: "Folha prevista",
             historico: "Meses anteriores",
+            comparativo: "Comparativo",
             configuracoes: "Ajustes"
         };
 
@@ -1177,6 +1380,8 @@ const App = {
         this.renderTabela();
         this.renderFolha();
         this.renderHistorico();
+        this.renderComparativo();
+        this.renderConfiguracoes();
         this.renderPreview();
     },
 
@@ -1374,6 +1579,52 @@ const App = {
             return acc;
         }, {});
         const codigos = Object.keys(grupos).sort().reverse();
+        const projecoesAlvo = this.$("#historicoLista");
+        const recebidosAlvo = this.dom.historicoRecebidosLista;
+
+        this.text("#historicoProjecoesCount", `${codigos.length} competencia(s)`);
+        this.text("#historicoRecebidosCount", `${this.state.holerites.length} arquivo(s)`);
+
+        if (!codigos.length) {
+            projecoesAlvo.innerHTML = '<div class="empty-state">Nenhuma projecao salva ainda.</div>';
+        } else {
+            projecoesAlvo.innerHTML = codigos.map(codigo => {
+                const competencia = Competencia.competenciaPorCodigo(codigo);
+                const totais = Horas.somarCompetencia(grupos[codigo], competencia);
+                const folha = Folha.calcularFolha(totais, competencia);
+
+                return `
+                    <article class="history-row">
+                        <div>
+                            <strong>${Competencia.formatarCompetencia(competencia)}</strong>
+                            <span>${totais.diasRegistrados} registro(s) | ${Horas.formatarHoras(totais.horasTrabalhadas)} trabalhadas</span>
+                        </div>
+                        <strong>${Folha.moeda(folha.liquidoMes)}</strong>
+                    </article>
+                `;
+            }).join("");
+        }
+
+        if (!this.state.holerites.length) {
+            recebidosAlvo.innerHTML = '<div class="empty-state">Importe seus contracheques para montar o historico recebido.</div>';
+        } else {
+            recebidosAlvo.innerHTML = this.state.holerites.map(holerite => {
+                const competencia = Competencia.competenciaPorCodigo(holerite.competencia);
+
+                return `
+                    <article class="history-row">
+                        <div>
+                            <strong>${Competencia.formatarCompetencia(competencia)}</strong>
+                            <span>Recebido no mes ${Folha.moeda(holerite.totalRecebidoMes || holerite.liquidoReceber)}</span>
+                            <span>Fechamento ${Folha.moeda(holerite.liquidoReceber)} | FGTS ${Folha.moeda(holerite.fgts)}</span>
+                        </div>
+                        <strong>${Folha.moeda(holerite.liquidoReceber)}</strong>
+                    </article>
+                `;
+            }).join("");
+        }
+
+        return;
         const alvo = this.$("#historicoLista");
 
         if (!codigos.length) {
@@ -1397,6 +1648,109 @@ const App = {
                 </article>
             `;
         }).join("");
+    },
+
+    renderComparativo() {
+        const { folha } = this.obterResumo();
+        const competencia = this.state.competencia;
+        const holerite = this.state.holerites.find(item => item.competencia === competencia.codigo);
+
+        if (!holerite) {
+            this.dom.comparativoGrid.innerHTML = `
+                <div class="empty-state comparison-empty">
+                    Importe o contracheque desta competencia para comparar previsto e recebido.
+                </div>
+            `;
+            this.dom.comparativoLista.innerHTML = '<div class="empty-state">Sem dados recebidos para comparar.</div>';
+            this.dom.comparativoPeriodo.textContent = Competencia.formatarCompetencia(competencia);
+            return;
+        }
+
+        const totalRecebidoMes = holerite.totalRecebidoMes || holerite.liquidoReceber;
+        const itens = [
+            {
+                titulo: "Previsto dia 01",
+                valor: folha.pagamentoFinal,
+                detalhe: `Mes ${Folha.moeda(folha.liquidoMes)}`
+            },
+            {
+                titulo: "Recebido dia 01",
+                valor: holerite.liquidoReceber,
+                detalhe: this.formatarDelta(holerite.liquidoReceber - folha.pagamentoFinal)
+            },
+            {
+                titulo: "Previsto no mes",
+                valor: folha.liquidoMes,
+                detalhe: `Adiantamento ${Folha.moeda(folha.adiantamento)}`
+            },
+            {
+                titulo: "Recebido no mes",
+                valor: totalRecebidoMes,
+                detalhe: this.formatarDelta(totalRecebidoMes - folha.liquidoMes)
+            }
+        ];
+
+        this.dom.comparativoGrid.innerHTML = itens.map(item => `
+            <article class="metric-card comparison-card">
+                <span class="metric-label">${item.titulo}</span>
+                <strong>${Folha.moeda(item.valor)}</strong>
+                <small class="${this.getDeltaClass(item.detalhe)}">${item.detalhe}</small>
+            </article>
+        `).join("");
+
+        const linhas = [
+            ["Proventos", folha.proventos, holerite.proventos],
+            ["FGTS", folha.fgts, holerite.fgts],
+            ["Adiantamento", folha.adiantamento, holerite.adiantamento],
+            ["INSS", folha.inss, holerite.inss],
+            ["IRRF fechamento", folha.irrf, holerite.irrf],
+            ["IRRF quinzena", folha.irrfAdiantamento, holerite.irrfAdiantamento],
+            ["Pagamento dia 01", folha.pagamentoFinal, holerite.liquidoReceber],
+            ["Total do mes", folha.liquidoMes, totalRecebidoMes]
+        ];
+
+        this.dom.comparativoLista.innerHTML = linhas.map(([label, previsto, recebido]) => {
+            const delta = recebido - previsto;
+
+            return `
+                <div class="comparison-row">
+                    <div>
+                        <strong>${label}</strong>
+                        <span>Previsto ${Folha.moeda(previsto)} | Recebido ${Folha.moeda(recebido)}</span>
+                    </div>
+                    <strong class="${delta < 0 ? "delta-negative" : delta > 0 ? "delta-positive" : ""}">
+                        ${delta === 0 ? "Sem diferenca" : this.formatarDelta(delta)}
+                    </strong>
+                </div>
+            `;
+        }).join("");
+
+        this.dom.comparativoPeriodo.textContent = Competencia.formatarCompetencia(competencia);
+    },
+
+    renderConfiguracoes() {
+        this.text("#payslipCount", `${this.state.holerites.length} arquivo(s) importados`);
+    },
+
+    formatarDelta(valor) {
+        const prefixo = valor > 0 ? "+" : "-";
+        return `${prefixo} ${Folha.moeda(Math.abs(valor))}`;
+    },
+
+    getDeltaClass(texto) {
+        if (typeof texto !== "string") {
+            return "";
+        }
+
+        if (texto.startsWith("+")) {
+            return "delta-positive";
+        }
+
+        if (texto.startsWith("-")) {
+            return "delta-negative";
+        }
+
+        return "";
     },
 
     renderPreview() {
