@@ -56,6 +56,8 @@ const App = {
             pageTitle: this.$("#pageTitle"),
             competenciaAtual: this.$("#competenciaAtual"),
             competenciaSelect: this.$("#competenciaSelect"),
+            adiantamentoPrevisto: this.$("#adiantamentoPrevisto"),
+            fgtsPrevisto: this.$("#fgtsPrevisto"),
             navItems: this.$$(".nav-item"),
             views: this.$$(".view"),
             form: this.$("#apontamentoForm"),
@@ -78,6 +80,8 @@ const App = {
             importFileName: this.$("#importFileName"),
             importSummary: this.$("#importSummary"),
             confirmImportBtn: this.$("#confirmImportBtn"),
+            resumoFinanceiro: this.$("#resumoFinanceiro"),
+            resumoFgts: this.$("#resumoFgts"),
             authScreen: this.$("#authScreen"),
             loginForm: this.$("#loginForm"),
             signupForm: this.$("#signupForm"),
@@ -1138,6 +1142,8 @@ const App = {
 
         this.text("#liquidoPrevisto", Folha.moeda(folha.liquido));
         this.text("#brutoPrevisto", Folha.moeda(folha.bruto));
+        this.text("#adiantamentoPrevisto", Folha.moeda(folha.adiantamentoLiquido));
+        this.text("#fgtsPrevisto", Folha.moeda(folha.fgts));
         this.text("#horasNormais", Horas.formatarHoras(totais.horasNormais));
         this.text("#faltantes", Horas.formatarHoras(totais.horasFaltantes));
         this.text("#he60", Horas.formatarHoras(totais.he60));
@@ -1148,8 +1154,8 @@ const App = {
         this.text("#diasRegistrados", String(totais.diasRegistrados));
         this.text("#totalHorasMix", `${Horas.formatarHoras(totalHoras)} totais`);
         this.text("#jornadaHint", `Jornada ${Horas.formatarHoras(totais.jornadaRegistrada)}`);
-        this.text("#liquidoHint", `Bruto ${Folha.moeda(folha.bruto)} · Descontos ${Folha.moeda(folha.descontos)}`);
-        this.text("#brutoHint", `Descontos ${Folha.moeda(folha.descontos)}`);
+        this.text("#liquidoHint", `Mês ${Folha.moeda(folha.liquidoMes)} · Adiantamento ${Folha.moeda(folha.adiantamentoLiquido)}`);
+        this.text("#brutoHint", `Descontos ${Folha.moeda(folha.descontos)} · FGTS ${Folha.moeda(folha.fgts)}`);
         this.text("#faltasHint", `${totais.diasComFalta} dia(s)`);
         this.text(
             "#dashboardSubtitle",
@@ -1270,14 +1276,25 @@ const App = {
         ];
         const descontos = [
             ["Faltas / atrasos", folha.descontoAtrasos],
+            ["Adiantamento salarial", folha.adiantamentoBruto],
+            ["IRRF do adiantamento", folha.irrfAdiantamento],
+            ...folha.deducoesRecorrentes.itens.map(item => [item.label, item.valor]),
             ["INSS", folha.inss],
             ["IRRF", folha.irrf]
         ];
+        const resumoFinanceiro = [
+            ["Liquido total do mes", folha.liquidoMes],
+            ["Adiantamento liquido estimado", folha.adiantamentoLiquido],
+            ["Pagamento final estimado", folha.pagamentoFinal],
+            ["FGTS depositado pela empresa", folha.fgts]
+        ];
 
-        this.text("#folhaLiquido", Folha.moeda(folha.liquido));
-        this.text("#folhaResumo", `${totais.diasRegistrados} registro(s)`);
+        this.text("#folhaLiquido", Folha.moeda(folha.pagamentoFinal));
+        this.text("#folhaResumo", `${totais.diasRegistrados} registro(s) · Mês ${Folha.moeda(folha.liquidoMes)}`);
         this.text("#proventosTotal", Folha.moeda(folha.proventos));
         this.text("#descontosTotal", Folha.moeda(folha.descontos));
+        this.text("#resumoFgts", `FGTS ${Folha.moeda(folha.fgts)}`);
+        this.renderBreakdown("#resumoFinanceiro", resumoFinanceiro);
         this.renderBreakdown("#proventosList", proventos);
         this.renderBreakdown("#descontosList", descontos);
     },
@@ -1320,7 +1337,7 @@ const App = {
                         <span>${Competencia.formatarCompetencia(competencia)}</span>
                         <span>${totais.diasRegistrados} registro(s) | ${Horas.formatarHoras(totais.horasTrabalhadas)}</span>
                     </div>
-                    <strong>${Folha.moeda(folha.liquido)}</strong>
+                    <strong>${Folha.moeda(folha.liquidoMes)}</strong>
                 </article>
             `;
         }).join("");

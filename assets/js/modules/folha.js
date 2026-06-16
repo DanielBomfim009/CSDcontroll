@@ -7,6 +7,17 @@ class FolhaService {
     constructor() {
         this.VALOR_HORA = 36.35;
         this.PERICULOSIDADE = 0.30;
+        this.FGTS = 0.08;
+        this.DEPENDENTES_IRRF = 1;
+        this.DEDUCAO_DEPENDENTE_IRRF = 189.59;
+        this.ADIANTAMENTO_BRUTO_REFERENCIA = 1926.83;
+        this.IRRF_ADIANTAMENTO_REFERENCIA = 928.76;
+        this.DEDUCOES_RECORRENTES = [
+            { chave: "contribuicaoAssistencial", label: "Contribuição Assistencial", valor: 52.50 },
+            { chave: "seguroSaude", label: "Seguro saúde médio", valor: 71.82 },
+            { chave: "emprestimo1", label: "Empréstimo Consignado 1", valor: 859.21 },
+            { chave: "emprestimo2", label: "Empréstimo Consignado 2", valor: 322.92 }
+        ];
         this.TETO_INSS = 908.85;
         this.INSS_FAIXAS = [
             { limite: 1518.00, taxa: 0.075 },
@@ -90,23 +101,61 @@ class FolhaService {
     }
 
     calcularIRRF(base) {
-        if (!base || base <= 2428.80) {
+        const baseTributavel = this.arredondar(
+            Math.max(0, (base || 0) - this.DEPENDENTES_IRRF * this.DEDUCAO_DEPENDENTE_IRRF)
+        );
+
+        if (!baseTributavel || baseTributavel <= 2428.80) {
             return 0;
         }
 
-        if (base <= 2826.65) {
-            return this.arredondar(Math.max(0, base * 0.075 - 182.16));
+        if (baseTributavel <= 2826.65) {
+            return this.arredondar(Math.max(0, baseTributavel * 0.075 - 182.16));
         }
 
-        if (base <= 3751.05) {
-            return this.arredondar(Math.max(0, base * 0.15 - 394.16));
+        if (baseTributavel <= 3751.05) {
+            return this.arredondar(Math.max(0, baseTributavel * 0.15 - 394.16));
         }
 
-        if (base <= 4664.68) {
-            return this.arredondar(Math.max(0, base * 0.225 - 675.49));
+        if (baseTributavel <= 4664.68) {
+            return this.arredondar(Math.max(0, baseTributavel * 0.225 - 675.49));
         }
 
-        return this.arredondar(Math.max(0, base * 0.275 - 908.73));
+        return this.arredondar(Math.max(0, baseTributavel * 0.275 - 908.73));
+    }
+
+    calcularFGTS(base) {
+        return this.arredondar((base || 0) * this.FGTS);
+    }
+
+    calcularAdiantamentoBruto(bruto) {
+        if (!bruto || bruto <= 0) {
+            return 0;
+        }
+
+        return this.arredondar(Math.min(this.ADIANTAMENTO_BRUTO_REFERENCIA, bruto * 0.40));
+    }
+
+    calcularIRRFAdiantamento(irrfTotal, adiantamentoBruto) {
+        if (!irrfTotal || !adiantamentoBruto) {
+            return 0;
+        }
+
+        return this.arredondar(Math.min(irrfTotal, this.IRRF_ADIANTAMENTO_REFERENCIA));
+    }
+
+    calcularDeducoesRecorrentes(bruto) {
+        if (!bruto || bruto <= 0) {
+            return {
+                total: 0,
+                itens: this.DEDUCOES_RECORRENTES.map(item => ({ ...item, valor: 0 }))
+            };
+        }
+
+        const itens = this.DEDUCOES_RECORRENTES.map(item => ({ ...item }));
+        const total = this.arredondar(itens.reduce((acc, item) => acc + item.valor, 0));
+
+        return { total, itens };
     }
 
     calcularFolha(totaisHoras = {}) {
@@ -129,11 +178,25 @@ class FolhaService {
         );
 
         const bruto = this.arredondar(proventos - descontoAtrasos);
+        const fgts = this.calcularFGTS(bruto);
         const inss = this.calcularINSS(bruto);
         const baseIR = this.arredondar(bruto - inss);
-        const irrf = this.calcularIRRF(baseIR);
-        const descontos = this.arredondar(descontoAtrasos + inss + irrf);
-        const liquido = this.arredondar(bruto - inss - irrf);
+        const irrfTotal = this.calcularIRRF(baseIR);
+        const adiantamentoBruto = this.calcularAdiantamentoBruto(bruto);
+        const irrfAdiantamento = this.calcularIRRFAdiantamento(irrfTotal, adiantamentoBruto);
+        const adiantamentoLiquido = this.arredondar(Math.max(0, adiantamentoBruto - irrfAdiantamento));
+        const irrf = this.arredondar(Math.max(0, irrfTotal - irrfAdiantamento));
+        const deducoesRecorrentes = this.calcularDeducoesRecorrentes(bruto);
+        const descontos = this.arredondar(
+            descontoAtrasos +
+            inss +
+            irrf +
+            irrfAdiantamento +
+            adiantamentoBruto +
+            deducoesRecorrentes.total
+        );
+        const pagamentoFinal = this.arredondar(Math.max(0, proventos - descontos));
+        const liquidoMes = this.arredondar(pagamentoFinal + adiantamentoLiquido);
 
         return {
             salarioNormal,
@@ -147,11 +210,19 @@ class FolhaService {
             descontoAtrasos,
             proventos,
             bruto,
+            fgts,
             inss,
             baseIR,
+            irrfTotal,
             irrf,
+            irrfAdiantamento,
+            adiantamentoBruto,
+            adiantamentoLiquido,
+            deducoesRecorrentes,
             descontos,
-            liquido
+            pagamentoFinal,
+            liquidoMes,
+            liquido: pagamentoFinal
         };
     }
 

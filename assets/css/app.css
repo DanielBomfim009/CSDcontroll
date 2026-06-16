@@ -809,12 +809,13 @@ tbody tr:hover {
 }
 
 .payroll-grid {
-    grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
 }
 
 .total-payroll {
-    min-height: 220px;
+    grid-column: 1 / -1;
+    min-height: 0;
 }
 
 .breakdown-row strong:last-child {
