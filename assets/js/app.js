@@ -580,11 +580,11 @@ const App = {
         this.state.view = view;
         document.body.dataset.view = view;
         const titles = {
-            dashboard: "Dashboard financeiro",
-            apontamentos: "Apontamentos",
+            dashboard: "Painel financeiro",
+            apontamentos: "Registro de ponto",
             folha: "Folha prevista",
-            historico: "Histórico",
-            configuracoes: "Configurações"
+            historico: "Meses anteriores",
+            configuracoes: "Ajustes"
         };
 
         this.dom.navItems.forEach(item => {
