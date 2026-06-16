@@ -631,13 +631,13 @@ const App = {
         this.text("#diasRegistrados", String(totais.diasRegistrados));
         this.text("#totalHorasMix", `${Horas.formatarHoras(totalHoras)} totais`);
         this.text("#jornadaHint", `Jornada ${Horas.formatarHoras(totais.jornadaRegistrada)}`);
-        this.text("#liquidoHint", `Proventos ${Folha.moeda(folha.proventos)}`);
+        this.text("#liquidoHint", `Bruto ${Folha.moeda(folha.bruto)} · Descontos ${Folha.moeda(folha.descontos)}`);
         this.text("#brutoHint", `Descontos ${Folha.moeda(folha.descontos)}`);
         this.text("#faltasHint", `${totais.diasComFalta} dia(s)`);
         this.text(
             "#dashboardSubtitle",
             totais.diasRegistrados
-                ? `${totais.diasRegistrados} dia(s) | ${Horas.formatarHoras(totalExtras)} HE`
+                ? `${totais.diasRegistrados} dia(s) · ${Horas.formatarHoras(totalExtras)} HE`
                 : "Sem apontamentos"
         );
 
@@ -673,7 +673,7 @@ const App = {
     },
 
     renderRecentes() {
-        const recentes = this.state.apontamentos.slice(0, 5);
+        const recentes = this.state.apontamentos.slice(0, 3);
         const alvo = this.$("#recentEntries");
 
         if (!recentes.length) {

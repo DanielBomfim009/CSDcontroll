@@ -1,4 +1,4 @@
-const CACHE_NAME = "salariopro-v8";
+const CACHE_NAME = "salariopro-v9";
 
 const APP_SHELL = [
     "./",
